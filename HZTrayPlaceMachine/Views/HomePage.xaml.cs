@@ -12,19 +12,23 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using HZTrayPlaceMachine.ViewModels;
 
-namespace HZTrayPlaceMachine
+namespace HZTrayPlaceMachine.Views
 {
     /// <summary>
-    /// MainWindow.xaml 的交互逻辑
+    /// HomePage.xaml 的交互逻辑
     /// </summary>
-    public partial class MainWindow
+    public partial class HomePage : UserControl
     {
-        public MainWindow()
+        public HomePage()
         {
             InitializeComponent();
-            this.DataContext = new MainWindowViewModel();
+            Global.CameraImageViewer = CameraImageViewer;
+        }
+
+        private void MsgTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            MsgTextBox.ScrollToEnd();
         }
     }
 }

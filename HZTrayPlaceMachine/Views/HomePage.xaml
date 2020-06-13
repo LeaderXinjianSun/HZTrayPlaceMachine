@@ -1,0 +1,100 @@
+﻿<UserControl x:Class="HZTrayPlaceMachine.Views.HomePage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:HZTrayPlaceMachine.Views"
+             xmlns:halconviewer="clr-namespace:HalconViewer;assembly=HalconViewer"
+             mc:Ignorable="d" 
+             d:DesignHeight="708" d:DesignWidth="1024">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Dictionary1.xaml"></ResourceDictionary>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="2*"></RowDefinition>
+            <RowDefinition></RowDefinition>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="2*"></ColumnDefinition>
+            <ColumnDefinition></ColumnDefinition>
+        </Grid.ColumnDefinitions>
+        <halconviewer:ImageViewer Visibility="{Binding HalconWindowVisibility}" Name="CameraImageViewer" Margin="1" Image="{Binding CameraIamge}" AutoRepaint="True" AppendHObject="{Binding CameraAppendHObject}" GCStyle="{Binding CameraGCStyle}"></halconviewer:ImageViewer>
+        <TextBox Grid.Row="1" VerticalAlignment="Stretch" VerticalContentAlignment="Top" HorizontalContentAlignment="Left" Margin="1" x:Name="MsgTextBox" IsReadOnly="True" TextChanged="MsgTextBox_TextChanged"  FontSize="14" Background="Black" FontFamily="宋体" Foreground="White" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Text="{Binding MessageStr}"></TextBox>
+        <Grid Grid.Column="1" Grid.RowSpan="2">
+            <Grid.RowDefinitions>
+                <RowDefinition></RowDefinition>
+                <RowDefinition></RowDefinition>
+                <RowDefinition Height="5*"></RowDefinition>
+            </Grid.RowDefinitions>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition></ColumnDefinition>
+                    <ColumnDefinition></ColumnDefinition>
+                    <ColumnDefinition></ColumnDefinition>
+                </Grid.ColumnDefinitions>
+                <Button Grid.Column="2" Style="{StaticResource MahApps.Styles.Button.Square.Accent}" Margin="10" Content="拍照" FontSize="24" Command="{Binding GrabCommand}"></Button>
+            </Grid>
+            <Grid Grid.Row="1" Style="{StaticResource GridLoginStatus}">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <RadioButton Content="Ⅰ" Command="{Binding SelectIndexCommand}" CommandParameter="0" IsChecked="True"></RadioButton>
+                    <RadioButton Content="Ⅱ" Command="{Binding SelectIndexCommand}" CommandParameter="1"></RadioButton>
+                    <RadioButton Content="Ⅲ" Command="{Binding SelectIndexCommand}" CommandParameter="2"></RadioButton>
+                    <RadioButton Content="Ⅳ" Command="{Binding SelectIndexCommand}" CommandParameter="3"></RadioButton>
+                </StackPanel>
+            </Grid>
+            <Grid Grid.Row="2" Style="{StaticResource GridLoginStatus}">
+                <Grid.RowDefinitions>
+                    <RowDefinition></RowDefinition>
+                    <RowDefinition></RowDefinition>
+                    <RowDefinition></RowDefinition>
+                    <RowDefinition></RowDefinition>
+                    <RowDefinition></RowDefinition>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition></ColumnDefinition>
+                    <ColumnDefinition></ColumnDefinition>
+                    <ColumnDefinition></ColumnDefinition>
+                </Grid.ColumnDefinitions>
+                <Button Grid.Column="1" Style="{StaticResource MahApps.Styles.Button.Square.Accent}" Margin="10" Content="模板" FontSize="24" Command="{Binding ShapeModelCommand}"></Button>
+                <Button Grid.Column="2" Style="{StaticResource MahApps.Styles.Button.Square.Accent}" Margin="10" Content="直线" FontSize="24" Command="{Binding LineCommand}"></Button>
+                <Button Style="{StaticResource MahApps.Styles.Button.Square.Accent}" Margin="10" Content="读取" FontSize="24" Command="{Binding ReadImageCommand}"></Button>
+                <Button Grid.Row="1" Style="{StaticResource MahApps.Styles.Button.Square.Accent}" Margin="10" Content="区域" FontSize="24" Command="{Binding RegionCommand}"></Button>
+                <Button Grid.Row="1" Grid.Column="2" Style="{StaticResource MahApps.Styles.Button.Square.Accent}" Margin="10" Content="标定" FontSize="24" Command="{Binding CalibCommand}"></Button>
+                <Button Grid.Column="2" Grid.Row="2" Style="{StaticResource MahApps.Styles.Button.Square.Accent}" Margin="10" Content="保存" FontSize="24" Command="{Binding SaveCommand}"></Button>
+                <Button Grid.Row="1" Grid.Column="1" Style="{StaticResource MahApps.Styles.Button.Square.Accent}" Margin="10" Content="识别" FontSize="24" Command="{Binding RecognizeCommand}"></Button>
+                <StackPanel Orientation="Vertical" Grid.Row="3" Grid.RowSpan="2" Grid.ColumnSpan="3">
+                    <StackPanel Orientation="Horizontal" Margin="0,1">
+                        <Label Content="拍照位X:" Width="60"></Label>
+                        <TextBox Width="60" Text="{Binding CameraX}"></TextBox>
+                        <Label Content="mm" Width="40"></Label>
+                        <Label Content="目标位X:" Width="60"></Label>
+                        <TextBox Width="60" Text="{Binding TargetX}"></TextBox>
+                        <Label Content="mm"></Label>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,1">
+                        <Label Content="拍照位Y:" Width="60"></Label>
+                        <TextBox Width="60" Text="{Binding CameraY}"></TextBox>
+                        <Label Content="mm"  Width="40"></Label>
+                        <Label Content="目标位Y:" Width="60"></Label>
+                        <TextBox Width="60" Text="{Binding TargetY}"></TextBox>
+                        <Label Content="mm"></Label>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,1">
+                        <Label Content="拍照位U:" Width="60"></Label>
+                        <TextBox Width="60" Text="{Binding CameraU}"></TextBox>
+                        <Label Content="°"  Width="40"></Label>
+                        <Label Content="目标位U:" Width="60"></Label>
+                        <TextBox Width="60" Text="{Binding TargetU}"></TextBox>
+                        <Label Content="°"></Label>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </Grid>
+        
+    </Grid>
+</UserControl>

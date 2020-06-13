@@ -1,12 +1,57 @@
-﻿<Window x:Class="HZTrayPlaceMachine.MainWindow"
+﻿<mah:MetroWindow x:Class="HZTrayPlaceMachine.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mah="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"                 
         xmlns:local="clr-namespace:HZTrayPlaceMachine"
+        xmlns:Views="clr-namespace:HZTrayPlaceMachine.Views"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525">
+        Title="{Binding WindowTitle}" Height="768" Width="1024" WindowStartupLocation ="CenterScreen" ResizeMode="CanResize"
+        Icon="mechanical_arm_64px_1224819_easyicon.net.ico">
+    <mah:MetroWindow.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Views\Dictionary1.xaml"></ResourceDictionary>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </mah:MetroWindow.Resources>
+    <i:Interaction.Triggers>
+        <i:EventTrigger EventName="Loaded">
+            <i:InvokeCommandAction Command="{Binding AppLoadedEventCommand}" />
+        </i:EventTrigger>
+        <i:EventTrigger EventName="Closed">
+            <i:InvokeCommandAction Command="{Binding AppClosedEventCommand}" />
+        </i:EventTrigger>
+    </i:Interaction.Triggers>
     <Grid>
-        
+        <Grid.RowDefinitions>
+            <RowDefinition Height="30"></RowDefinition>
+            <RowDefinition></RowDefinition>
+            <RowDefinition Height="30"></RowDefinition>
+        </Grid.RowDefinitions>
+        <Menu VerticalAlignment="Center">
+            <MenuItem Header="主页" Command="{Binding MenuActionCommand}" CommandParameter="0"></MenuItem>
+            <MenuItem Header="{Binding LoginMenuItemHeader}" Command="{Binding LoginCommand}"></MenuItem>
+        </Menu>
+        <Views:HomePage Grid.Row="1"></Views:HomePage>
+        <StatusBar Grid.Row="2">
+            <StatusBarItem>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock VerticalAlignment="Center">Camera</TextBlock>
+                    <Ellipse Style="{StaticResource EllipseStatusCamera}"></Ellipse>
+                </StackPanel>
+            </StatusBarItem>
+            <StatusBarItem>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock VerticalAlignment="Center">Robot</TextBlock>
+                    <Ellipse Style="{StaticResource EllipseStatusRobot}"></Ellipse>
+                </StackPanel>
+            </StatusBarItem>
+            <StatusBarItem>
+                <TextBlock Text="{Binding Cycle,StringFormat=Cycle:{0}ms}"></TextBlock>
+            </StatusBarItem>
+        </StatusBar>
     </Grid>
-</Window>
+</mah:MetroWindow>
