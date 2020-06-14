@@ -33,9 +33,11 @@
         </Grid.RowDefinitions>
         <Menu VerticalAlignment="Center">
             <MenuItem Header="主页" Command="{Binding MenuActionCommand}" CommandParameter="0"></MenuItem>
+            <MenuItem Header="点位" Command="{Binding MenuActionCommand}" CommandParameter="1"></MenuItem>
             <MenuItem Header="{Binding LoginMenuItemHeader}" Command="{Binding LoginCommand}"></MenuItem>
         </Menu>
-        <Views:HomePage Grid.Row="1"></Views:HomePage>
+        <Views:HomePage Grid.Row="1" Visibility="{Binding HomePageVisibility}"></Views:HomePage>
+        <Views:PointsPage Grid.Row="1" Visibility="{Binding PointsPageVisibility,FallbackValue=Collapsed}"></Views:PointsPage>
         <StatusBar Grid.Row="2">
             <StatusBarItem>
                 <StackPanel Orientation="Horizontal">
@@ -47,6 +49,12 @@
                 <StackPanel Orientation="Horizontal">
                     <TextBlock VerticalAlignment="Center">Robot</TextBlock>
                     <Ellipse Style="{StaticResource EllipseStatusRobot}"></Ellipse>
+                </StackPanel>
+            </StatusBarItem>
+            <StatusBarItem>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock VerticalAlignment="Center">Robot</TextBlock>
+                    <Ellipse Style="{StaticResource EllipseStatusPLC}"></Ellipse>
                 </StackPanel>
             </StatusBarItem>
             <StatusBarItem>

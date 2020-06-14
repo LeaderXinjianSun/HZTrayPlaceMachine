@@ -20,6 +20,13 @@
             </DataTrigger>
         </Style.Triggers>
     </Style>
+    <Style TargetType="Ellipse" BasedOn="{StaticResource EllipseStatusBase}" x:Key="EllipseStatusPLC">
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding StatusPLC}" Value="True">
+                <Setter Property="Fill" Value="Green"></Setter>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
     <Style TargetType="Grid" x:Key="GridLoginStatus">
         <Setter Property="Visibility" Value="Visible"></Setter>
         <Style.Triggers>

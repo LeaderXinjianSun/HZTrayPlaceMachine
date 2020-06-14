@@ -1,0 +1,239 @@
+﻿<UserControl x:Class="HZTrayPlaceMachine.Views.PointsPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:HZTrayPlaceMachine.Views"
+             mc:Ignorable="d" 
+             d:DesignHeight="708" d:DesignWidth="1024">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition></ColumnDefinition>
+            <ColumnDefinition></ColumnDefinition>
+            <ColumnDefinition></ColumnDefinition>
+            <ColumnDefinition></ColumnDefinition>
+        </Grid.ColumnDefinitions>
+        <GroupBox Header="吸嘴1">
+            <StackPanel Orientation="Vertical">
+                <StackPanel Orientation="Vertical" Grid.Row="3" Grid.RowSpan="2" Grid.ColumnSpan="3">
+                    <StackPanel Orientation="Horizontal" Margin="0,1">
+                        <Label Content="放料位1X:" Width="60"></Label>
+                        <TextBox Width="60" Text="{Binding Points[4].X}"></TextBox>
+                        <Label Content="mm" Width="40"></Label>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,1">
+                        <Label Content="放料位1Y:" Width="60"></Label>
+                        <TextBox Width="60" Text="{Binding Points[4].Y}"></TextBox>
+                        <Label Content="mm"  Width="40"></Label>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,1">
+                        <Label Content="放料位1U:" Width="60"></Label>
+                        <TextBox Width="60" Text="{Binding Points[4].U}"></TextBox>
+                        <Label Content="°"  Width="40"></Label>
+                    </StackPanel>
+                </StackPanel>
+                <StackPanel Margin="0,10,0,0" Orientation="Vertical" Grid.Row="3" Grid.RowSpan="2" Grid.ColumnSpan="3">
+                    <StackPanel Orientation="Horizontal" Margin="0,1">
+                        <Label Content="放料位2X:" Width="60"></Label>
+                        <TextBox Width="60" Text="{Binding Points[5].X}"></TextBox>
+                        <Label Content="mm" Width="40"></Label>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,1">
+                        <Label Content="放料位2Y:" Width="60"></Label>
+                        <TextBox Width="60" Text="{Binding Points[5].Y}"></TextBox>
+                        <Label Content="mm"  Width="40"></Label>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,1">
+                        <Label Content="放料位2U:" Width="60"></Label>
+                        <TextBox Width="60" Text="{Binding Points[5].U}"></TextBox>
+                        <Label Content="°"  Width="40"></Label>
+                    </StackPanel>
+                </StackPanel>
+                <StackPanel Margin="0,10,0,0" Orientation="Vertical" Grid.Row="3" Grid.RowSpan="2" Grid.ColumnSpan="3">
+                    <StackPanel Orientation="Horizontal" Margin="0,1">
+                        <Label Content="放料位3X:" Width="60"></Label>
+                        <TextBox Width="60" Text="{Binding Points[6].X}"></TextBox>
+                        <Label Content="mm" Width="40"></Label>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,1">
+                        <Label Content="放料位3Y:" Width="60"></Label>
+                        <TextBox Width="60" Text="{Binding Points[6].Y}"></TextBox>
+                        <Label Content="mm"  Width="40"></Label>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,1">
+                        <Label Content="放料位3U:" Width="60"></Label>
+                        <TextBox Width="60" Text="{Binding Points[6].U}"></TextBox>
+                        <Label Content="°"  Width="40"></Label>
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+        </GroupBox>
+        <GroupBox Grid.Column="1" Header="吸嘴2">
+            <StackPanel Orientation="Vertical">
+                <StackPanel Orientation="Vertical" Grid.Row="3" Grid.RowSpan="2" Grid.ColumnSpan="3">
+                    <StackPanel Orientation="Horizontal" Margin="0,1">
+                        <Label Content="放料位1X:" Width="60"></Label>
+                        <TextBox Width="60" Text="{Binding Points[7].X}"></TextBox>
+                        <Label Content="mm" Width="40"></Label>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,1">
+                        <Label Content="放料位1Y:" Width="60"></Label>
+                        <TextBox Width="60" Text="{Binding Points[7].Y}"></TextBox>
+                        <Label Content="mm"  Width="40"></Label>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,1">
+                        <Label Content="放料位1U:" Width="60"></Label>
+                        <TextBox Width="60" Text="{Binding Points[7].U}"></TextBox>
+                        <Label Content="°"  Width="40"></Label>
+                    </StackPanel>
+                </StackPanel>
+                <StackPanel Margin="0,10,0,0" Orientation="Vertical" Grid.Row="3" Grid.RowSpan="2" Grid.ColumnSpan="3">
+                    <StackPanel Orientation="Horizontal" Margin="0,1">
+                        <Label Content="放料位2X:" Width="60"></Label>
+                        <TextBox Width="60" Text="{Binding Points[8].X}"></TextBox>
+                        <Label Content="mm" Width="40"></Label>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,1">
+                        <Label Content="放料位2Y:" Width="60"></Label>
+                        <TextBox Width="60" Text="{Binding Points[8].Y}"></TextBox>
+                        <Label Content="mm"  Width="40"></Label>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,1">
+                        <Label Content="放料位2U:" Width="60"></Label>
+                        <TextBox Width="60" Text="{Binding Points[8].U}"></TextBox>
+                        <Label Content="°"  Width="40"></Label>
+                    </StackPanel>
+                </StackPanel>
+                <StackPanel Margin="0,10,0,0" Orientation="Vertical" Grid.Row="3" Grid.RowSpan="2" Grid.ColumnSpan="3">
+                    <StackPanel Orientation="Horizontal" Margin="0,1">
+                        <Label Content="放料位3X:" Width="60"></Label>
+                        <TextBox Width="60" Text="{Binding Points[9].X}"></TextBox>
+                        <Label Content="mm" Width="40"></Label>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,1">
+                        <Label Content="放料位3Y:" Width="60"></Label>
+                        <TextBox Width="60" Text="{Binding Points[9].Y}"></TextBox>
+                        <Label Content="mm"  Width="40"></Label>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,1">
+                        <Label Content="放料位3U:" Width="60"></Label>
+                        <TextBox Width="60" Text="{Binding Points[9].U}"></TextBox>
+                        <Label Content="°"  Width="40"></Label>
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+            
+        </GroupBox>
+        <GroupBox Grid.Column="2" Header="吸嘴3">
+            <StackPanel Orientation="Vertical">
+                <StackPanel Orientation="Vertical" Grid.Row="3" Grid.RowSpan="2" Grid.ColumnSpan="3">
+                    <StackPanel Orientation="Horizontal" Margin="0,1">
+                        <Label Content="放料位1X:" Width="60"></Label>
+                        <TextBox Width="60" Text="{Binding Points[10].X}"></TextBox>
+                        <Label Content="mm" Width="40"></Label>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,1">
+                        <Label Content="放料位1Y:" Width="60"></Label>
+                        <TextBox Width="60" Text="{Binding Points[10].Y}"></TextBox>
+                        <Label Content="mm"  Width="40"></Label>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,1">
+                        <Label Content="放料位1U:" Width="60"></Label>
+                        <TextBox Width="60" Text="{Binding Points[10].U}"></TextBox>
+                        <Label Content="°"  Width="40"></Label>
+                    </StackPanel>
+                </StackPanel>
+                <StackPanel Margin="0,10,0,0" Orientation="Vertical" Grid.Row="3" Grid.RowSpan="2" Grid.ColumnSpan="3">
+                    <StackPanel Orientation="Horizontal" Margin="0,1">
+                        <Label Content="放料位2X:" Width="60"></Label>
+                        <TextBox Width="60" Text="{Binding Points[11].X}"></TextBox>
+                        <Label Content="mm" Width="40"></Label>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,1">
+                        <Label Content="放料位2Y:" Width="60"></Label>
+                        <TextBox Width="60" Text="{Binding Points[11].Y}"></TextBox>
+                        <Label Content="mm"  Width="40"></Label>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,1">
+                        <Label Content="放料位2U:" Width="60"></Label>
+                        <TextBox Width="60" Text="{Binding Points[11].U}"></TextBox>
+                        <Label Content="°"  Width="40"></Label>
+                    </StackPanel>
+                </StackPanel>
+                <StackPanel Margin="0,10,0,0" Orientation="Vertical" Grid.Row="3" Grid.RowSpan="2" Grid.ColumnSpan="3">
+                    <StackPanel Orientation="Horizontal" Margin="0,1">
+                        <Label Content="放料位3X:" Width="60"></Label>
+                        <TextBox Width="60" Text="{Binding Points[12].X}"></TextBox>
+                        <Label Content="mm" Width="40"></Label>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,1">
+                        <Label Content="放料位3Y:" Width="60"></Label>
+                        <TextBox Width="60" Text="{Binding Points[12].Y}"></TextBox>
+                        <Label Content="mm"  Width="40"></Label>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,1">
+                        <Label Content="放料位3U:" Width="60"></Label>
+                        <TextBox Width="60" Text="{Binding Points[12].U}"></TextBox>
+                        <Label Content="°"  Width="40"></Label>
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+        </GroupBox>
+        <GroupBox Grid.Column="3" Header="吸嘴4">
+            <StackPanel Orientation="Vertical">
+                <StackPanel Orientation="Vertical" Grid.Row="3" Grid.RowSpan="2" Grid.ColumnSpan="3">
+                    <StackPanel Orientation="Horizontal" Margin="0,1">
+                        <Label Content="放料位1X:" Width="60"></Label>
+                        <TextBox Width="60" Text="{Binding Points[13].X}"></TextBox>
+                        <Label Content="mm" Width="40"></Label>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,1">
+                        <Label Content="放料位1Y:" Width="60"></Label>
+                        <TextBox Width="60" Text="{Binding Points[13].Y}"></TextBox>
+                        <Label Content="mm"  Width="40"></Label>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,1">
+                        <Label Content="放料位1U:" Width="60"></Label>
+                        <TextBox Width="60" Text="{Binding Points[13].U}"></TextBox>
+                        <Label Content="°"  Width="40"></Label>
+                    </StackPanel>
+                </StackPanel>
+                <StackPanel Margin="0,10,0,0" Orientation="Vertical" Grid.Row="3" Grid.RowSpan="2" Grid.ColumnSpan="3">
+                    <StackPanel Orientation="Horizontal" Margin="0,1">
+                        <Label Content="放料位2X:" Width="60"></Label>
+                        <TextBox Width="60" Text="{Binding Points[14].X}"></TextBox>
+                        <Label Content="mm" Width="40"></Label>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,1">
+                        <Label Content="放料位2Y:" Width="60"></Label>
+                        <TextBox Width="60" Text="{Binding Points[14].Y}"></TextBox>
+                        <Label Content="mm"  Width="40"></Label>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,1">
+                        <Label Content="放料位2U:" Width="60"></Label>
+                        <TextBox Width="60" Text="{Binding Points[14].U}"></TextBox>
+                        <Label Content="°"  Width="40"></Label>
+                    </StackPanel>
+                </StackPanel>
+                <StackPanel Margin="0,10,0,0" Orientation="Vertical" Grid.Row="3" Grid.RowSpan="2" Grid.ColumnSpan="3">
+                    <StackPanel Orientation="Horizontal" Margin="0,1">
+                        <Label Content="放料位3X:" Width="60"></Label>
+                        <TextBox Width="60" Text="{Binding Points[15].X}"></TextBox>
+                        <Label Content="mm" Width="40"></Label>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,1">
+                        <Label Content="放料位3Y:" Width="60"></Label>
+                        <TextBox Width="60" Text="{Binding Points[15].Y}"></TextBox>
+                        <Label Content="mm"  Width="40"></Label>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,1">
+                        <Label Content="放料位3U:" Width="60"></Label>
+                        <TextBox Width="60" Text="{Binding Points[15].U}"></TextBox>
+                        <Label Content="°"  Width="40"></Label>
+                    </StackPanel>
+                </StackPanel>
+                <Button Content="更新" HorizontalAlignment="Right" Margin="0,0,10,0" Style="{StaticResource MahApps.Styles.Button.Square.Accent}" Command="{Binding UpdatePointsCommand}"></Button>
+            </StackPanel>
+        </GroupBox>
+    </Grid>
+</UserControl>

@@ -12,6 +12,8 @@ using Newtonsoft.Json;
 using BingLibrary.HVision;
 using BingLibrary.hjb.file;
 using ViewROI;
+using System.Diagnostics;
+using System.Collections.ObjectModel;
 
 namespace HZTrayPlaceMachine.ViewModels
 {
@@ -106,6 +108,7 @@ namespace HZTrayPlaceMachine.ViewModels
                 this.RaisePropertyChanged("StatusRobot");
             }
         }
+        
         private HImage cameraIamge;
 
         public HImage CameraIamge
@@ -117,6 +120,18 @@ namespace HZTrayPlaceMachine.ViewModels
                 this.RaisePropertyChanged("CameraIamge");
             }
         }
+        private bool statusPLC;
+
+        public bool StatusPLC
+        {
+            get { return statusPLC; }
+            set
+            {
+                statusPLC = value;
+                this.RaisePropertyChanged("StatusPLC");
+            }
+        }
+
         private HObject cameraAppendHObject;
 
         public HObject CameraAppendHObject
@@ -172,39 +187,7 @@ namespace HZTrayPlaceMachine.ViewModels
                 this.RaisePropertyChanged("CameraU");
             }
         }
-        private double targetX;
-
-        public double TargetX
-        {
-            get { return targetX; }
-            set
-            {
-                targetX = value;
-                this.RaisePropertyChanged("TargetX");
-            }
-        }
-        private double targetY;
-
-        public double TargetY
-        {
-            get { return targetY; }
-            set
-            {
-                targetY = value;
-                this.RaisePropertyChanged("TargetY");
-            }
-        }
-        private double targetU;
-
-        public double TargetU
-        {
-            get { return targetU; }
-            set
-            {
-                targetU = value;
-                this.RaisePropertyChanged("TargetU");
-            }
-        }
+        
         private bool onlyImage;
 
         public bool OnlyImage
@@ -214,6 +197,39 @@ namespace HZTrayPlaceMachine.ViewModels
             {
                 onlyImage = value;
                 this.RaisePropertyChanged("OnlyImage");
+            }
+        }
+        private ObservableCollection<Point> points;
+
+        public ObservableCollection<Point> Points
+        {
+            get { return points; }
+            set
+            {
+                points = value;
+                this.RaisePropertyChanged("Points");
+            }
+        }
+        private string homePageVisibility;
+
+        public string HomePageVisibility
+        {
+            get { return homePageVisibility; }
+            set
+            {
+                homePageVisibility = value;
+                this.RaisePropertyChanged("HomePageVisibility");
+            }
+        }
+        private string pointsPageVisibility;
+
+        public string PointsPageVisibility
+        {
+            get { return pointsPageVisibility; }
+            set
+            {
+                pointsPageVisibility = value;
+                this.RaisePropertyChanged("PointsPageVisibility");
             }
         }
 
@@ -232,16 +248,21 @@ namespace HZTrayPlaceMachine.ViewModels
         public DelegateCommand RegionCommand { get; set; }
         public DelegateCommand RecognizeCommand { get; set; }
         public DelegateCommand CalibCommand { get; set; }
+        public DelegateCommand UpdatePointsCommand { get; set; }
         #endregion
         #region 变量
         Metro metro = new Metro();
         int SelectIndexValue;
-        Point CameraP1, CameraP2, CameraP3, CameraP4;
-        Point TargetP1, TargetP2, TargetP3, TargetP4;
+        //Point CameraP1, CameraP2, CameraP3, CameraP4;
+        //Point TargetP1, TargetP2, TargetP3, TargetP4;
         CameraOperate cameraOperate = new CameraOperate();
         private string iniParameterPath = Path.Combine(System.Environment.CurrentDirectory, "Parameter.ini");
-        DXH.Net.DXHTCPClient YAMAHA_Link;
+        DXH.Modbus.DXHModbusTCP ModbusTCP_Client;
+        DXH.Robot.DXHYAMAHALink Robot_1_Link;
         bool HasStartCalib = false;
+        int[] Robot_1_In = new int[24];
+        int[] Robot_1_Out = new int[24];
+        bool isUpdatePoint = false;
         #endregion
         #region 构造函数
         public MainWindowViewModel()
@@ -259,6 +280,7 @@ namespace HZTrayPlaceMachine.ViewModels
             RegionCommand = new DelegateCommand(new Action(this.RegionCommandExecute));
             RecognizeCommand = new DelegateCommand(new Action(this.RecognizeCommandExecute));
             CalibCommand = new DelegateCommand(new Action(this.CalibCommandExecute));
+            UpdatePointsCommand = new DelegateCommand(new Action(this.UpdatePointsCommandExecute));
             Init();
         }
         #endregion
@@ -284,15 +306,39 @@ namespace HZTrayPlaceMachine.ViewModels
                     AddMessage("Camera Open Fail!");
                 }
             });
-            YAMAHA_Link.StartTCPConnect();
+
+            ModbusTCP_Client.StartConnect();
+            StartReadPLC();
+            Robot_1_Link.StartTCPConnect();
+            GetRobot_1_Status();
         }
         private void AppClosedEventCommandExecute()
         {
             cameraOperate.CloseCamera();
+            try
+            {
+                ModbusTCP_Client.Close();
+                Robot_1_Link.Close();
+            }
+            catch 
+            {
+
+            }
         }
         private void MenuActionCommandExecute(object p)
         {
-
+            switch (p.ToString())
+            {
+                case "1":
+                    HomePageVisibility = "Collapsed";
+                    PointsPageVisibility = "Visible";
+                    break;
+                case "0":
+                default:
+                    HomePageVisibility = "Visible";
+                    PointsPageVisibility = "Collapsed";
+                    break;
+            }
         }
         private async void LoginCommandExecute()
         {
@@ -327,42 +373,30 @@ namespace HZTrayPlaceMachine.ViewModels
             {
                 case "0":
                     SelectIndexValue = 0;
-                    CameraX = CameraP1.X;
-                    CameraY = CameraP1.Y;
-                    CameraU = CameraP1.U;
-                    TargetX = TargetP1.X;
-                    TargetY = TargetP1.Y;
-                    TargetU = TargetP1.U;
+                    CameraX = Points[0].X;
+                    CameraY = Points[0].Y;
+                    CameraU = Points[0].U;
                     AddMessage("选择1号产品参数");
                     break;
                 case "1":
                     SelectIndexValue = 1;
-                    CameraX = CameraP2.X;
-                    CameraY = CameraP2.Y;
-                    CameraU = CameraP2.U;
-                    TargetX = TargetP2.X;
-                    TargetY = TargetP2.Y;
-                    TargetU = TargetP2.U;
+                    CameraX = Points[1].X;
+                    CameraY = Points[1].Y;
+                    CameraU = Points[1].U;
                     AddMessage("选择2号产品参数");
                     break;
                 case "2":
                     SelectIndexValue = 2;
-                    CameraX = CameraP3.X;
-                    CameraY = CameraP3.Y;
-                    CameraU = CameraP3.U;
-                    TargetX = TargetP3.X;
-                    TargetY = TargetP3.Y;
-                    TargetU = TargetP3.U;
+                    CameraX = Points[2].X;
+                    CameraY = Points[2].Y;
+                    CameraU = Points[2].U;          
                     AddMessage("选择3号产品参数");
                     break;
                 case "3":
                     SelectIndexValue = 3;
-                    CameraX = CameraP4.X;
-                    CameraY = CameraP4.Y;
-                    CameraU = CameraP4.U;
-                    TargetX = TargetP4.X;
-                    TargetY = TargetP4.Y;
-                    TargetU = TargetP4.U;
+                    CameraX = Points[3].X;
+                    CameraY = Points[3].Y;
+                    CameraU = Points[3].U;
                     AddMessage("选择4号产品参数");
                     break;
                 default:
@@ -393,55 +427,7 @@ namespace HZTrayPlaceMachine.ViewModels
             {
                 Directory.CreateDirectory(path);
             }
-            switch (SelectIndexValue)
-            {
-                case 0:
-                    CameraP1.X = CameraX;
-                    CameraP1.Y = CameraY;
-                    CameraP1.U = CameraU;
-                    TargetP1.X = TargetX;
-                    TargetP1.Y = TargetY;
-                    TargetP1.U = TargetU;
-                    WriteToJson(CameraP1, Path.Combine(System.Environment.CurrentDirectory, @"Camera\1", "CameraP.json"));
-                    WriteToJson(TargetP1, Path.Combine(System.Environment.CurrentDirectory, @"Camera\1", "TargetP.json"));
-                    AddMessage("保存1号产品参数");
-                    break;
-                case 1:
-                    CameraP2.X = CameraX;
-                    CameraP2.Y = CameraY;
-                    CameraP2.U = CameraU;
-                    TargetP2.X = TargetX;
-                    TargetP2.Y = TargetY;
-                    TargetP2.U = TargetU;
-                    WriteToJson(CameraP2, Path.Combine(System.Environment.CurrentDirectory, @"Camera\2", "CameraP.json"));
-                    WriteToJson(TargetP2, Path.Combine(System.Environment.CurrentDirectory, @"Camera\2", "TargetP.json"));
-                    AddMessage("保存2号产品参数");
-                    break;
-                case 2:
-                    CameraP3.X = CameraX;
-                    CameraP3.Y = CameraY;
-                    CameraP3.U = CameraU;
-                    TargetP3.X = TargetX;
-                    TargetP3.Y = TargetY;
-                    TargetP3.U = TargetU;
-                    WriteToJson(CameraP3, Path.Combine(System.Environment.CurrentDirectory, @"Camera\3", "CameraP.json"));
-                    WriteToJson(TargetP3, Path.Combine(System.Environment.CurrentDirectory, @"Camera\3", "TargetP.json"));
-                    AddMessage("保存3号产品参数");
-                    break;
-                case 3:
-                    CameraP4.X = CameraX;
-                    CameraP4.Y = CameraY;
-                    CameraP4.U = CameraU;
-                    TargetP4.X = TargetX;
-                    TargetP4.Y = TargetY;
-                    TargetP4.U = TargetU;
-                    WriteToJson(CameraP4, Path.Combine(System.Environment.CurrentDirectory, @"Camera\4", "CameraP.json"));
-                    WriteToJson(TargetP4, Path.Combine(System.Environment.CurrentDirectory, @"Camera\4", "TargetP.json"));
-                    AddMessage("保存4号产品参数");
-                    break;
-                default:
-                    break;
-            }
+            WriteToJson(Points, Path.Combine(System.Environment.CurrentDirectory, @"Camera", "Points.json"));
 
 
         }
@@ -642,70 +628,75 @@ namespace HZTrayPlaceMachine.ViewModels
                             default:
                                 break;
                         }
+
                         DXH.Net.DXHTCPClient Calib_Link = new DXH.Net.DXHTCPClient();
                         string Calib_IPAddress = Inifile.INIGetStringValue(iniParameterPath, "System", "CalibIP", "192.168.1.13");
                         int Calib_IPPort = int.Parse(Inifile.INIGetStringValue(iniParameterPath, "System", "CalibPORT", "8000"));
                         Calib_Link.RemoteIPAddress = Calib_IPAddress;
                         Calib_Link.RemoteIPPort = Calib_IPPort;
+                        if (!OnlyImage)
+                        {
 
-                        if (Calib_Link.ConnectState != "Connected")
-                            Calib_Link.StartTCPConnect();
+                            if (Calib_Link.ConnectState != "Connected")
+                                Calib_Link.StartTCPConnect();
 
-                        if (Calib_Link.ConnectState != "Connected")
-                        {
-                            AddMessage("标定程序未连接.");
-                            await Task.Delay(1000);
-                        }
-                        if (Calib_Link.ConnectState != "Connected")
-                        {
-                            AddMessage("标定程序未连接..");
-                            await Task.Delay(1000);
-                        }
-                        if (Calib_Link.ConnectState != "Connected")
-                        {
-                            AddMessage("标定程序未连接...");
-                            await Task.Delay(1000);
-                        }
-                        if (Calib_Link.ConnectState != "Connected")
-                        {
-                            AddMessage("标定程序未连接....");
-                            await Task.Delay(1000);
-                        }
-                        if (Calib_Link.ConnectState != "Connected")
-                        {
-                            AddMessage("标定程序未连接.....");
-                            AddMessage("标定流程退出");
-                            HasStartCalib = false;
-                            return;
-                        }
+                            if (Calib_Link.ConnectState != "Connected")
+                            {
+                                AddMessage("标定程序未连接.");
+                                await Task.Delay(1000);
+                            }
+                            if (Calib_Link.ConnectState != "Connected")
+                            {
+                                AddMessage("标定程序未连接..");
+                                await Task.Delay(1000);
+                            }
+                            if (Calib_Link.ConnectState != "Connected")
+                            {
+                                AddMessage("标定程序未连接...");
+                                await Task.Delay(1000);
+                            }
+                            if (Calib_Link.ConnectState != "Connected")
+                            {
+                                AddMessage("标定程序未连接....");
+                                await Task.Delay(1000);
+                            }
+                            if (Calib_Link.ConnectState != "Connected")
+                            {
+                                AddMessage("标定程序未连接.....");
+                                AddMessage("标定流程退出");
+                                HasStartCalib = false;
+                                return;
+                            }
 
-                        AddMessage("标定程序连接成功");
+                            AddMessage("标定程序连接成功");
 
 
-                        string str = Calib_Link.TCPSend("START\r\n");
-                        AddMessage(str);
-                        if (str != "OK\r\n")
-                        {
-                            AddMessage("连接机械手失败!");
-                            HasStartCalib = false;
-                            return;
+                            string str = Calib_Link.TCPSend("START\r\n");
+                            AddMessage(str);
+                            if (str != "OK\r\n")
+                            {
+                                AddMessage("连接机械手失败!");
+                                HasStartCalib = false;
+                                return;
+                            }
                         }
+                        
 
                         int[][] diff = new int[9][] {
                     new int[] { 0,0,0},
-                    new int[] { -5,-5,0},
-                    new int[] { 0,-5,0},
-                    new int[] { 5,-5,0},
-                    new int[] { 5,0,0},
-                    new int[] { 5,5,0},
-                    new int[] { 0,5,0},
-                    new int[] { -5,5,0},
-                    new int[] { -5,0,0}
+                    new int[] { -10,-10,0},
+                    new int[] { 0,-10,0},
+                    new int[] { 10,-10,0},
+                    new int[] { 10,0,0},
+                    new int[] { 10,10,0},
+                    new int[] { 0,10,0},
+                    new int[] { -10,10,0},
+                    new int[] { -10,0,0}
                 };
                         double[][] diff_r = new double[3][] {
                     new double[] { 0,0,0},
-                    new double[] { 0,0,8},
-                    new double[] { 0,0, 8 * -1 }
+                    new double[] { 0,0,15},
+                    new double[] { 0,0, -15 }
                 };
                         if (!OnlyImage)
                         {
@@ -713,6 +704,7 @@ namespace HZTrayPlaceMachine.ViewModels
                             {
                                 await Task.Run(() => {
                                     string mMotionStr = Calib_Link.TCPSend(diff[i][0] + "," + diff[i][1] + "," + diff[i][2] + "\r\n", true, 3000);
+                                    AddMessage(diff[i][0] + "," + diff[i][1] + "," + diff[i][2]);
                                     AddMessage(mMotionStr);
                                 });
                                 await Task.Delay(3000);
@@ -742,11 +734,11 @@ namespace HZTrayPlaceMachine.ViewModels
                                 HOperatorSet.ReadShapeModel(Path.Combine(path, "ShapeModel.shm"), out ModelID);
                                 HOperatorSet.FindShapeModel(img, ModelID, (new HTuple(-45)).TupleRad(), (new HTuple(90)).TupleRad(), 0.5, 1, 0, "least_squares", 0, 0.9, out row, out column, out angle, out score);
 
-                                Array1[i] = new double[4] { row.D, column.D, CameraP1.X + diff[i][0], CameraP1.Y + diff[i][1] };
+                                Array1[i] = new double[4] { row.D, column.D, Points[0].X + diff[i][0], Points[0].Y + diff[i][1] };
                             }
                             catch (Exception ex)
                             {
-                                Array1[i] = new double[4] { 0, 0, CameraP1.X + diff[i][0], CameraP1.Y + diff[i][1] };
+                                Array1[i] = new double[4] { 0, 0, Points[0].X + diff[i][0], Points[0].Y + diff[i][1] };
                                 AddMessage(ex.Message);
                             }
                         }
@@ -771,6 +763,7 @@ namespace HZTrayPlaceMachine.ViewModels
                             {
                                 await Task.Run(() => {
                                     string mMotionStr = Calib_Link.TCPSend(diff_r[i][0] + "," + diff_r[i][1] + "," + diff_r[i][2] + "\r\n", true, 3000);
+                                    AddMessage(diff_r[i][0] + "," + diff_r[i][1] + "," + diff_r[i][2]);
                                     AddMessage(mMotionStr);
                                 });
                                 await Task.Delay(3000);
@@ -784,6 +777,7 @@ namespace HZTrayPlaceMachine.ViewModels
                                 }
                                 cameraOperate.SaveImage("bmp", Path.Combine(path, "Calib", (i + 1 + 9).ToString() + ".bmp"));
                             }
+                            Calib_Link.TCPSend("FINISH\r\n", false, 3000);
                         }
 
                         double[][] Array2 = new double[3][];
@@ -810,8 +804,8 @@ namespace HZTrayPlaceMachine.ViewModels
                         {
                             HTuple qx0, qy0;
                             HOperatorSet.AffineTransPoint2d(homMat2D, circleCenter[0], circleCenter[1], out qx0, out qy0);
-                            double delta_x = CameraP1.X - qx0;
-                            double delta_y = CameraP1.X - qy0;
+                            double delta_x = Points[0].X - qx0;
+                            double delta_y = Points[0].Y - qy0;
                             AddMessage(delta_x.ToString() + " , " + delta_y.ToString());
                             HOperatorSet.VectorToHomMat2d(new HTuple(Array1[0][0]).TupleConcat(Array1[1][0]).TupleConcat(Array1[2][0]).TupleConcat(Array1[3][0]).TupleConcat(Array1[4][0]).TupleConcat(Array1[5][0]).TupleConcat(Array1[6][0]).TupleConcat(Array1[7][0]).TupleConcat(Array1[8][0]),
                                 new HTuple(Array1[0][1]).TupleConcat(Array1[1][1]).TupleConcat(Array1[2][1]).TupleConcat(Array1[3][1]).TupleConcat(Array1[4][1]).TupleConcat(Array1[5][1]).TupleConcat(Array1[6][1]).TupleConcat(Array1[7][1]).TupleConcat(Array1[8][1]),
@@ -838,6 +832,7 @@ namespace HZTrayPlaceMachine.ViewModels
 
                         AddMessage("标定结束");
                         HasStartCalib = false;
+                        Calib_Link.Close();
                     }
                     catch (Exception ex)
                     {
@@ -852,134 +847,60 @@ namespace HZTrayPlaceMachine.ViewModels
                 HalconWindowVisibility = "Visible";
             }      
         }
+        private void UpdatePointsCommandExecute()
+        {
+            if (!isUpdatePoint)
+            {
+                isUpdatePoint = true;
+            }
+            //Points[5].X = DateTime.Now.Second;
+        }
         #endregion
         #region 自定义函数
         private void Init()
         {
-            YAMAHA_Link = new DXH.Net.DXHTCPClient();
-            string YAMAHA_IPAddress = Inifile.INIGetStringValue(iniParameterPath, "System", "IP", "192.168.1.13");
-            int YAMAHA_IPPort = int.Parse(Inifile.INIGetStringValue(iniParameterPath, "System", "PORT", "8000"));
-            YAMAHA_Link.RemoteIPAddress = YAMAHA_IPAddress;
-            YAMAHA_Link.RemoteIPPort = YAMAHA_IPPort;
-            YAMAHA_Link.ConnectStateChanged += YAMAHA_Link_ConnectStateChanged;
-            YAMAHA_Link.Received += YAMAHA_Link_Received;
+            
+            string YAMAHA_IPAddress = Inifile.INIGetStringValue(iniParameterPath, "System", "YAMAHAIP", "192.168.1.13");
             
 
-            WindowTitle = "HZTrayPlaceMachine20200612";
+            Robot_1_Link = new DXH.Robot.DXHYAMAHALink(YAMAHA_IPAddress);
+            Robot_1_Link.ConnectStateChanged += Robot_1_Link_ConnectStateChanged;
+
+            ModbusTCP_Client = new DXH.Modbus.DXHModbusTCP();
+            ModbusTCP_Client.RemoteIPAddress = Inifile.INIGetStringValue(iniParameterPath, "System", "MODBUSIP", "192.168.1.13");
+            ModbusTCP_Client.RemoteIPPort = 502;
+            ModbusTCP_Client.ModbusStateChanged += ModbusTCP_Client_ModbusStateChanged;
+            ModbusTCP_Client.ConnectStateChanged += ModbusTCP_Client_ConnectStateChanged;
+
+            WindowTitle = "HZTrayPlaceMachine20200614";
             IsLogin = false;
             LoginMenuItemHeader = "登录";
             MessageStr = "";
+            OnlyImage = true;
+            HomePageVisibility = "Visible";
+            PointsPageVisibility = "Collapsed";
             try
             {
-                using (StreamReader reader = new StreamReader(Path.Combine(System.Environment.CurrentDirectory, @"Camera\1", "CameraP.json")))
+                using (StreamReader reader = new StreamReader(Path.Combine(System.Environment.CurrentDirectory, @"Camera", "Points.json")))
                 {
                     string json = reader.ReadToEnd();
-                    CameraP1 = JsonConvert.DeserializeObject<Point>(json);
+                    Points = JsonConvert.DeserializeObject<ObservableCollection<Point>>(json);
                 }
             }
             catch (Exception ex)
             {
-                CameraP1 = new Point();
-                AddMessage(ex.Message);
-            }
-            try
-            {
-                using (StreamReader reader = new StreamReader(Path.Combine(System.Environment.CurrentDirectory, @"Camera\1", "TargetP.json")))
+                Points = new ObservableCollection<Point>();
+                for (int i = 0; i < 16; i++)
                 {
-                    string json = reader.ReadToEnd();
-                    TargetP1 = JsonConvert.DeserializeObject<Point>(json);
+                    Points.Add(new Point());
                 }
-            }
-            catch (Exception ex)
-            {
-                TargetP1 = new Point();
                 AddMessage(ex.Message);
             }
-            try
-            {
-                using (StreamReader reader = new StreamReader(Path.Combine(System.Environment.CurrentDirectory, @"Camera\2", "CameraP.json")))
-                {
-                    string json = reader.ReadToEnd();
-                    CameraP2 = JsonConvert.DeserializeObject<Point>(json);
-                }
-            }
-            catch (Exception ex)
-            {
-                CameraP2 = new Point();
-                AddMessage(ex.Message);
-            }
-            try
-            {
-                using (StreamReader reader = new StreamReader(Path.Combine(System.Environment.CurrentDirectory, @"Camera\2", "TargetP.json")))
-                {
-                    string json = reader.ReadToEnd();
-                    TargetP2 = JsonConvert.DeserializeObject<Point>(json);
-                }
-            }
-            catch (Exception ex)
-            {
-                TargetP2 = new Point();
-                AddMessage(ex.Message);
-            }
-            try
-            {
-                using (StreamReader reader = new StreamReader(Path.Combine(System.Environment.CurrentDirectory, @"Camera\3", "CameraP.json")))
-                {
-                    string json = reader.ReadToEnd();
-                    CameraP3 = JsonConvert.DeserializeObject<Point>(json);
-                }
-            }
-            catch (Exception ex)
-            {
-                CameraP3 = new Point();
-                AddMessage(ex.Message);
-            }
-            try
-            {
-                using (StreamReader reader = new StreamReader(Path.Combine(System.Environment.CurrentDirectory, @"Camera\3", "TargetP.json")))
-                {
-                    string json = reader.ReadToEnd();
-                    TargetP3 = JsonConvert.DeserializeObject<Point>(json);
-                }
-            }
-            catch (Exception ex)
-            {
-                TargetP3 = new Point();
-                AddMessage(ex.Message);
-            }
-            try
-            {
-                using (StreamReader reader = new StreamReader(Path.Combine(System.Environment.CurrentDirectory, @"Camera\4", "CameraP.json")))
-                {
-                    string json = reader.ReadToEnd();
-                    CameraP4 = JsonConvert.DeserializeObject<Point>(json);
-                }
-            }
-            catch (Exception ex)
-            {
-                CameraP4 = new Point();
-                AddMessage(ex.Message);
-            }
-            try
-            {
-                using (StreamReader reader = new StreamReader(Path.Combine(System.Environment.CurrentDirectory, @"Camera\4", "TargetP.json")))
-                {
-                    string json = reader.ReadToEnd();
-                    TargetP4 = JsonConvert.DeserializeObject<Point>(json);
-                }
-            }
-            catch (Exception ex)
-            {
-                TargetP4 = new Point();
-                AddMessage(ex.Message);
-            }
+            
             SelectIndexValue = 0;
-            CameraX = CameraP1.X;
-            CameraY = CameraP1.Y;
-            CameraU = CameraP1.U;
-            TargetX = TargetP1.X;
-            TargetY = TargetP1.Y;
-            TargetU = TargetP1.U;
+            CameraX = Points[0].X;
+            CameraY = Points[0].Y;
+            CameraU = Points[0].U;  
         }
         private string GetPassWord()
         {
@@ -1071,35 +992,32 @@ namespace HZTrayPlaceMachine.ViewModels
                 StatusCamera = cameraOperate.Connected;
             }
         }
-        private Tuple<double[], bool> RecognizeOperete(int index,HImage image)
+        private Tuple<double[], double[], double[], bool> RecognizeOperete(int index,HImage image)
         {
             string path = "";
-            Point camerap, targetp;
+            Point camerap, targetp1, targetp2, targetp3;
             switch (index)
             {
-                case 0:
-                    path = Path.Combine(System.Environment.CurrentDirectory, @"Camera\1");
-                    camerap = CameraP1;
-                    targetp = TargetP1;
-                    break;
                 case 1:
                     path = Path.Combine(System.Environment.CurrentDirectory, @"Camera\2");
-                    camerap = CameraP2;
-                    targetp = TargetP2;
+                    camerap = Points[1];
+                    targetp1 = Points[4]; targetp2 = Points[5]; targetp3 = Points[6];
                     break;
                 case 2:
                     path = Path.Combine(System.Environment.CurrentDirectory, @"Camera\3");
-                    camerap = CameraP3;
-                    targetp = TargetP3;
+                    camerap = Points[2];
+                    targetp1 = Points[7]; targetp2 = Points[8]; targetp3 = Points[9];
                     break;
                 case 3:
                     path = Path.Combine(System.Environment.CurrentDirectory, @"Camera\4");
-                    camerap = CameraP4;
-                    targetp = TargetP4;
+                    camerap = Points[3];
+                    targetp1 = Points[10]; targetp2 = Points[11]; targetp3 = Points[12];
                     break;
+                case 0:
                 default:
-                    camerap = CameraP1;
-                    targetp = TargetP1;
+                    path = Path.Combine(System.Environment.CurrentDirectory, @"Camera\1");
+                    camerap = Points[0];
+                    targetp1 = Points[13]; targetp2 = Points[14]; targetp3 = Points[15];
                     break;
             }
             try
@@ -1169,25 +1087,32 @@ namespace HZTrayPlaceMachine.ViewModels
                 HTuple T2;
                 HOperatorSet.VectorAngleToRigid(CamImage_x1, CamImage_y1, new HTuple(lineAngle2 * -1).TupleRad(), CamImage_x, CamImage_y, new HTuple(lineAngle1 * -1).TupleRad(), out T2);//T2是新料移动到模板料位置的变换
                 HTuple T1;
-                HOperatorSet.VectorAngleToRigid(camerap.X, camerap.Y, new HTuple(camerap.U).TupleRad(), targetp.X, targetp.Y, new HTuple(targetp.U).TupleRad(), out T1);//T1是拍照位置移动到贴合位置的变换
+                HOperatorSet.VectorAngleToRigid(camerap.X, camerap.Y, new HTuple(camerap.U).TupleRad(), targetp1.X, targetp1.Y, new HTuple(targetp1.U).TupleRad(), out T1);//T1是拍照位置移动到贴合位置的变换
                 HTuple CamRobot_x1, CamRobot_y1;
                 HOperatorSet.AffineTransPoint2d(T2, camerap.X, camerap.Y, out CamRobot_x1, out CamRobot_y1);//移动到新料与模板料重合
                 HTuple FitRobot_x1, FitRobot_y1;
                 HOperatorSet.AffineTransPoint2d(T1, CamRobot_x1, CamRobot_y1, out FitRobot_x1, out FitRobot_y1);//移动到贴合位置
+                double[] resultP1 = new double[3] { FitRobot_x1.D - targetp1.X, FitRobot_y1.D - targetp1.Y, (lineAngle1 - lineAngle2) * -1 };
+                HOperatorSet.VectorAngleToRigid(camerap.X, camerap.Y, new HTuple(camerap.U).TupleRad(), targetp2.X, targetp2.Y, new HTuple(targetp2.U).TupleRad(), out T1);
+                HOperatorSet.AffineTransPoint2d(T1, CamRobot_x1, CamRobot_y1, out FitRobot_x1, out FitRobot_y1);
+                double[] resultP2 = new double[3] { FitRobot_x1.D - targetp2.X, FitRobot_y1.D - targetp2.Y, (lineAngle1 - lineAngle2) * -1 };
+                HOperatorSet.VectorAngleToRigid(camerap.X, camerap.Y, new HTuple(camerap.U).TupleRad(), targetp3.X, targetp3.Y, new HTuple(targetp3.U).TupleRad(), out T1);
+                HOperatorSet.AffineTransPoint2d(T1, CamRobot_x1, CamRobot_y1, out FitRobot_x1, out FitRobot_y1);
+                double[] resultP3 = new double[3] { FitRobot_x1.D - targetp3.X, FitRobot_y1.D - targetp3.Y, (lineAngle1 - lineAngle2) * -1 };
                 #endregion
                 #region 范围
                 bool result = true;
-                if (Math.Abs( FitRobot_x1.D - targetp.X) > 10 || Math.Abs(FitRobot_y1.D - targetp.Y) > 10 || Math.Abs(lineAngle1 - lineAngle2) > 15)
+                if (Math.Abs(resultP1[0]) > 10 || Math.Abs(resultP1[1]) > 10 || Math.Abs(resultP2[0]) > 10 || Math.Abs(resultP2[1]) > 10 || Math.Abs(resultP3[0]) > 10 || Math.Abs(resultP3[1]) > 10 || Math.Abs(lineAngle1 - lineAngle2) > 15)
                 {
                     result = false;
                 }
                 #endregion
-                return new Tuple<double[], bool>(new double[3] { FitRobot_x1.D - targetp.X, FitRobot_y1.D - targetp.Y, (lineAngle1 - lineAngle2) * -1 }, result);
+                return new Tuple<double[], double[], double[], bool>(resultP1, resultP2, resultP3, result);
             }
             catch (Exception ex)
             {
                 AddMessage(ex.Message);
-                return new Tuple<double[], bool>(new double[3] { 0, 0, 0 }, false);
+                return new Tuple<double[], double[], double[], bool>(new double[3] { 0, 0, 0 }, new double[3] { 0, 0, 0 }, new double[3] { 0, 0, 0 }, false);
             }
 
         }
@@ -1198,9 +1123,9 @@ namespace HZTrayPlaceMachine.ViewModels
             HTuple max;
             HOperatorSet.TupleMax(area, out max);
 
-            for (int i = 0; i < area.LArr.Length; i++)
+            for (int i = 0; i < area.IArr.Length; i++)
             {
-                if (area.LArr[i] == max)
+                if (area.IArr[i] == max)
                 {
                     return i;
                 }
@@ -1224,54 +1149,241 @@ namespace HZTrayPlaceMachine.ViewModels
             xy[1] = y;
             return xy;
         }
-        private void YAMAHA_Link_ConnectStateChanged(object sender, string e)
+        
+        private void ModbusTCP_Client_ConnectStateChanged(object sender, string e)
         {
-            AddMessage("Robot连接:" + e.ToString());
-            StatusRobot = e == "Connected";
-            if (e == "Connected")
-            {
-                YAMAHA_Link.TCPSend("C0\r\n", false);
-            }
+            AddMessage("PLC网络连接：" + e);
+            StatusPLC = e == "Connected";
         }
-        public void YAMAHA_Link_Received(object sender, string e)
+        private void ModbusTCP_Client_ModbusStateChanged(object sender, bool e)
         {
-            AddMessage("机械手 Rec:" + e);
-            if (e.Contains("CCD"))
+            //StatusPLC = e;
+        }
+        private void Robot_1_Link_ConnectStateChanged(object sender, string e)
+        {
+            AddMessage("机械手互刷连接：" + e.ToString());
+            StatusRobot = e == "Connected";
+        }
+        bool mStartReadPLCStatus = false;
+        private async void StartReadPLC()
+        {
+            if (!mStartReadPLCStatus)
+                mStartReadPLCStatus = true;
+            else
+                return;
+            await Task.Delay(500);
+
+            Task Task_StartReadPLC = Task.Run(() =>
             {
-                cameraOperate.GrabImageVoid(0);
-                CameraIamge = cameraOperate.CurrentImage;
-            }
-            if (e.Contains("CCD1"))
+                while (mStartReadPLCStatus)
+                {
+                    try
+                    {
+                        System.Threading.Thread.Sleep(10);
+                        int[] mPLC_Out = ModbusTCP_Client.ModbusRead(1, 1, 200, 24);
+
+                        if (mPLC_Out == null)
+                            continue;
+
+                        Robot_1_In = mPLC_Out;
+                        ModbusTCP_Client.ModbusWrite(1, 15, 230, Robot_1_Out);//写给PLC机械手输出信号
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("StartReadPLC:" + ex.Message);
+                    }
+                }
+            });
+            await Task_StartReadPLC;
+        }
+        bool HasStartGetRobot_1_Stauts = false;
+        public async void GetRobot_1_Status()
+        {
+            Stopwatch sw = new Stopwatch();
+            if (HasStartGetRobot_1_Stauts == false)
+                HasStartGetRobot_1_Stauts = true;
+            else
+                return;
+            await Task.Delay(1000);
+
+            Task Task_GetRobotStatus = Task.Run(() =>
             {
-                var calcrst = RecognizeOperete(0, CameraIamge);
-                if (calcrst.Item2)
+                while (HasStartGetRobot_1_Stauts)
                 {
-                    YAMAHA_Link.TCPSend("CCD,"+ (calcrst.Item1[0] + TargetP1.X).ToString("F2") + "," + (calcrst.Item1[1] + TargetP1.Y).ToString("F2") + "," + (calcrst.Item1[2] + TargetP1.U).ToString("F2") + "\r\n");
+                    sw.Restart();
+                    try
+                    {
+                        #region 互刷
+                        int[] mStatus = Robot_1_Link.RobotReadM(100, 24);
+                        if (mStatus != null)
+                            Robot_1_Out = mStatus;
+                        Robot_1_Link.RobotWriteM(10, Robot_1_In);
+                        Robot_1_Link.RobotWriteM(0, new int[] { 1 });
+                        #endregion
+                        #region 视觉
+                        int[] CCDCmd = Robot_1_Link.RobotReadM(200, 4);
+                        if (CCDCmd != null)
+                        {
+                            if (CCDCmd[0] == 1)
+                            {
+                                AddMessage("位置1触发");
+                                cameraOperate.GrabImageVoid(0);
+                                CameraIamge = cameraOperate.CurrentImage;
+                                var calcrst = RecognizeOperete(0, CameraIamge);
+                                if (calcrst.Item4)
+                                {
+                                    Robot_1_Link.RobotWriteM(210, new int[] { 1 });
+                                    Robot_1_Link.RobotWriteP(155, calcrst.Item1[0], calcrst.Item1[1], 0, calcrst.Item1[2], 2);
+                                    Robot_1_Link.RobotWriteP(156, calcrst.Item2[0], calcrst.Item2[1], 0, calcrst.Item2[2], 2);
+                                    Robot_1_Link.RobotWriteP(157, calcrst.Item3[0], calcrst.Item3[1], 0, calcrst.Item3[2], 2);
+                                }
+                                else
+                                {
+                                    Robot_1_Link.RobotWriteM(211, new int[] { 1 });
+                                    Robot_1_Link.RobotWriteP(155, 0, 0, 0, 0, 2);
+                                    Robot_1_Link.RobotWriteP(156, 0, 0, 0, 0, 2);
+                                    Robot_1_Link.RobotWriteP(157, 0, 0, 0, 0, 2);
+                                }
+                                Robot_1_Link.RobotWriteM(200, new int[] { 0 });
+                            }
+                            if (CCDCmd[1] == 1)
+                            {
+                                AddMessage("位置2触发");
+                                cameraOperate.GrabImageVoid(0);
+                                CameraIamge = cameraOperate.CurrentImage;
+                                var calcrst = RecognizeOperete(1, CameraIamge);
+                                if (calcrst.Item4)
+                                {
+                                    Robot_1_Link.RobotWriteM(210, new int[] { 1 });
+                                    Robot_1_Link.RobotWriteP(159, calcrst.Item1[0], calcrst.Item1[1], 0, calcrst.Item1[2], 2);
+                                    Robot_1_Link.RobotWriteP(160, calcrst.Item2[0], calcrst.Item2[1], 0, calcrst.Item2[2], 2);
+                                    Robot_1_Link.RobotWriteP(161, calcrst.Item3[0], calcrst.Item3[1], 0, calcrst.Item3[2], 2);
+                                }
+                                else
+                                {
+                                    Robot_1_Link.RobotWriteM(211, new int[] { 1 });
+                                    Robot_1_Link.RobotWriteP(159, 0, 0, 0, 0, 2);
+                                    Robot_1_Link.RobotWriteP(160, 0, 0, 0, 0, 2);
+                                    Robot_1_Link.RobotWriteP(161, 0, 0, 0, 0, 2);
+                                }
+                                Robot_1_Link.RobotWriteM(201, new int[] { 0 });
+                            }
+                            if (CCDCmd[2] == 1)
+                            {
+                                AddMessage("位置3触发");
+                                cameraOperate.GrabImageVoid(0);
+                                CameraIamge = cameraOperate.CurrentImage;
+                                var calcrst = RecognizeOperete(2, CameraIamge);
+                                if (calcrst.Item4)
+                                {
+                                    Robot_1_Link.RobotWriteM(210, new int[] { 1 });
+                                    Robot_1_Link.RobotWriteP(162, calcrst.Item1[0], calcrst.Item1[1], 0, calcrst.Item1[2], 2);
+                                    Robot_1_Link.RobotWriteP(163, calcrst.Item2[0], calcrst.Item2[1], 0, calcrst.Item2[2], 2);
+                                    Robot_1_Link.RobotWriteP(164, calcrst.Item3[0], calcrst.Item3[1], 0, calcrst.Item3[2], 2);
+                                }
+                                else
+                                {
+                                    Robot_1_Link.RobotWriteM(211, new int[] { 1 });
+                                    Robot_1_Link.RobotWriteP(162, 0, 0, 0, 0, 2);
+                                    Robot_1_Link.RobotWriteP(163, 0, 0, 0, 0, 2);
+                                    Robot_1_Link.RobotWriteP(164, 0, 0, 0, 0, 2);
+                                }
+                                Robot_1_Link.RobotWriteM(202, new int[] { 0 });
+                            }
+                            if (CCDCmd[3] == 1)
+                            {
+                                AddMessage("位置4触发");
+                                cameraOperate.GrabImageVoid(0);
+                                CameraIamge = cameraOperate.CurrentImage;
+                                var calcrst = RecognizeOperete(3, CameraIamge);
+                                if (calcrst.Item4)
+                                {
+                                    Robot_1_Link.RobotWriteM(210, new int[] { 1 });
+                                    Robot_1_Link.RobotWriteP(166, calcrst.Item1[0], calcrst.Item1[1], 0, calcrst.Item1[2], 2);
+                                    Robot_1_Link.RobotWriteP(167, calcrst.Item2[0], calcrst.Item2[1], 0, calcrst.Item2[2], 2);
+                                    Robot_1_Link.RobotWriteP(168, calcrst.Item3[0], calcrst.Item3[1], 0, calcrst.Item3[2], 2);
+                                }
+                                else
+                                {
+                                    Robot_1_Link.RobotWriteM(211, new int[] { 1 });
+                                    Robot_1_Link.RobotWriteP(168, 0, 0, 0, 0, 2);
+                                    Robot_1_Link.RobotWriteP(167, 0, 0, 0, 0, 2);
+                                    Robot_1_Link.RobotWriteP(168, 0, 0, 0, 0, 2);
+                                }
+                                Robot_1_Link.RobotWriteM(203, new int[] { 0 });
+                            }
+                        }
+                        #endregion
+                        #region 点位
+                        if (isUpdatePoint)
+                        {
+                            //拍照位
+                            for (int i = 0; i < 4; i++)
+                            {
+                                double[] p = Robot_1_Link.RobotReadP(31 + i);
+                                Points[i].X = p[0];
+                                Points[i].Y = p[1];
+                                Points[i].U = p[3];
+                                //System.Threading.Thread.Sleep(50);
+                            }
+                            //目标位
+                            for (int i = 0; i < 4; i++)
+                            {
+                                for (int j = 0; j < 3; j++)
+                                {
+                                    double[] p = Robot_1_Link.RobotReadP(139 + j + 4 * i);
+                                    Points[i * 3 + j].X = p[0];
+                                    Points[i * 3 + j].Y = p[1];
+                                    Points[i * 3 + j].U = p[3];
+                                    //System.Threading.Thread.Sleep(50);
+                                }
+                            }
+                            isUpdatePoint = false;
+                            WriteToJson(Points, Path.Combine(System.Environment.CurrentDirectory, @"Camera", "Points.json"));
+                            switch (SelectIndexValue)
+                            {
+                                case 0:
+                                    CameraX = Points[0].X;
+                                    CameraY = Points[0].Y;
+                                    CameraU = Points[0].U;
+                                    break;
+                                case 1:
+                                    SelectIndexValue = 1;
+                                    CameraX = Points[1].X;
+                                    CameraY = Points[1].Y;
+                                    CameraU = Points[1].U;
+                                    break;
+                                case 2:
+                                    SelectIndexValue = 2;
+                                    CameraX = Points[2].X;
+                                    CameraY = Points[2].Y;
+                                    CameraU = Points[2].U;
+                                    break;
+                                case 3:
+                                    SelectIndexValue = 3;
+                                    CameraX = Points[3].X;
+                                    CameraY = Points[3].Y;
+                                    CameraU = Points[3].U;
+                                    break;
+                                default:
+                                    break;
+                            }
+                            AddMessage("点位更新完成");
+                        }
+
+
+                        //139
+                        //155
+                        #endregion
+                    }
+                    catch(Exception ex) { AddMessage(ex.Message); isUpdatePoint = false; }
+                    System.Threading.Thread.Sleep(100);
+                    Cycle = sw.ElapsedMilliseconds;
                 }
-                else
-                {
-                    YAMAHA_Link.TCPSend("CCD,999999,999999,999999" + "\r\n");
-                }
-            }
-            //if (e.Contains("CCDzheng"))
-            //{//拍照
-            //    AcquireCCD1();
-            //}
-            //else if (e.Contains("CCDfan"))
-            //{
-            //    AcquireCCD2();
-            //}
-            //else if (e.Contains("BARCODE"))
-            //{
-            //    Scan_Barcode();
-            //}
+            });
+            await Task_GetRobotStatus;
         }
         #endregion
     }
-    class Point
-    {
-        public double X { get; set; }
-        public double Y { get; set; }
-        public double U { get; set; }
-    }
+
 }
