@@ -594,6 +594,9 @@ namespace HZTrayPlaceMachine.ViewModels
         {
             var calcrst = RecognizeOperete(SelectIndexValue,CameraIamge);
             AddMessage(calcrst.Item1[0].ToString("F2") + "," + calcrst.Item1[1].ToString("F2") + "," + calcrst.Item1[2].ToString("F2"));
+            AddMessage(calcrst.Item2[0].ToString("F2") + "," + calcrst.Item2[1].ToString("F2") + "," + calcrst.Item2[2].ToString("F2"));
+            AddMessage(calcrst.Item3[0].ToString("F2") + "," + calcrst.Item3[1].ToString("F2") + "," + calcrst.Item3[2].ToString("F2"));
+
         }
         private async void CalibCommandExecute()
         {
@@ -1230,6 +1233,9 @@ namespace HZTrayPlaceMachine.ViewModels
                                 cameraOperate.GrabImageVoid(0);
                                 CameraIamge = cameraOperate.CurrentImage;
                                 var calcrst = RecognizeOperete(0, CameraIamge);
+                                AddMessage(calcrst.Item1[0].ToString("F2") + "," + calcrst.Item1[1].ToString("F2") + "," + calcrst.Item1[2].ToString("F2"));
+                                AddMessage(calcrst.Item2[0].ToString("F2") + "," + calcrst.Item2[1].ToString("F2") + "," + calcrst.Item2[2].ToString("F2"));
+                                AddMessage(calcrst.Item3[0].ToString("F2") + "," + calcrst.Item3[1].ToString("F2") + "," + calcrst.Item3[2].ToString("F2"));
                                 if (calcrst.Item4)
                                 {
                                     Robot_1_Link.RobotWriteM(210, new int[] { 1 });
@@ -1252,6 +1258,9 @@ namespace HZTrayPlaceMachine.ViewModels
                                 cameraOperate.GrabImageVoid(0);
                                 CameraIamge = cameraOperate.CurrentImage;
                                 var calcrst = RecognizeOperete(1, CameraIamge);
+                                AddMessage(calcrst.Item1[0].ToString("F2") + "," + calcrst.Item1[1].ToString("F2") + "," + calcrst.Item1[2].ToString("F2"));
+                                AddMessage(calcrst.Item2[0].ToString("F2") + "," + calcrst.Item2[1].ToString("F2") + "," + calcrst.Item2[2].ToString("F2"));
+                                AddMessage(calcrst.Item3[0].ToString("F2") + "," + calcrst.Item3[1].ToString("F2") + "," + calcrst.Item3[2].ToString("F2"));
                                 if (calcrst.Item4)
                                 {
                                     Robot_1_Link.RobotWriteM(210, new int[] { 1 });
@@ -1274,19 +1283,22 @@ namespace HZTrayPlaceMachine.ViewModels
                                 cameraOperate.GrabImageVoid(0);
                                 CameraIamge = cameraOperate.CurrentImage;
                                 var calcrst = RecognizeOperete(2, CameraIamge);
+                                AddMessage(calcrst.Item1[0].ToString("F2") + "," + calcrst.Item1[1].ToString("F2") + "," + calcrst.Item1[2].ToString("F2"));
+                                AddMessage(calcrst.Item2[0].ToString("F2") + "," + calcrst.Item2[1].ToString("F2") + "," + calcrst.Item2[2].ToString("F2"));
+                                AddMessage(calcrst.Item3[0].ToString("F2") + "," + calcrst.Item3[1].ToString("F2") + "," + calcrst.Item3[2].ToString("F2"));
                                 if (calcrst.Item4)
                                 {
                                     Robot_1_Link.RobotWriteM(210, new int[] { 1 });
-                                    Robot_1_Link.RobotWriteP(162, calcrst.Item1[0], calcrst.Item1[1], 0, calcrst.Item1[2], 2);
-                                    Robot_1_Link.RobotWriteP(163, calcrst.Item2[0], calcrst.Item2[1], 0, calcrst.Item2[2], 2);
-                                    Robot_1_Link.RobotWriteP(164, calcrst.Item3[0], calcrst.Item3[1], 0, calcrst.Item3[2], 2);
+                                    Robot_1_Link.RobotWriteP(163, calcrst.Item1[0], calcrst.Item1[1], 0, calcrst.Item1[2], 2);
+                                    Robot_1_Link.RobotWriteP(164, calcrst.Item2[0], calcrst.Item2[1], 0, calcrst.Item2[2], 2);
+                                    Robot_1_Link.RobotWriteP(165, calcrst.Item3[0], calcrst.Item3[1], 0, calcrst.Item3[2], 2);
                                 }
                                 else
                                 {
                                     Robot_1_Link.RobotWriteM(211, new int[] { 1 });
-                                    Robot_1_Link.RobotWriteP(162, 0, 0, 0, 0, 2);
                                     Robot_1_Link.RobotWriteP(163, 0, 0, 0, 0, 2);
                                     Robot_1_Link.RobotWriteP(164, 0, 0, 0, 0, 2);
+                                    Robot_1_Link.RobotWriteP(165, 0, 0, 0, 0, 2);
                                 }
                                 Robot_1_Link.RobotWriteM(202, new int[] { 0 });
                             }
@@ -1296,19 +1308,22 @@ namespace HZTrayPlaceMachine.ViewModels
                                 cameraOperate.GrabImageVoid(0);
                                 CameraIamge = cameraOperate.CurrentImage;
                                 var calcrst = RecognizeOperete(3, CameraIamge);
+                                AddMessage(calcrst.Item1[0].ToString("F2") + "," + calcrst.Item1[1].ToString("F2") + "," + calcrst.Item1[2].ToString("F2"));
+                                AddMessage(calcrst.Item2[0].ToString("F2") + "," + calcrst.Item2[1].ToString("F2") + "," + calcrst.Item2[2].ToString("F2"));
+                                AddMessage(calcrst.Item3[0].ToString("F2") + "," + calcrst.Item3[1].ToString("F2") + "," + calcrst.Item3[2].ToString("F2"));
                                 if (calcrst.Item4)
                                 {
                                     Robot_1_Link.RobotWriteM(210, new int[] { 1 });
-                                    Robot_1_Link.RobotWriteP(166, calcrst.Item1[0], calcrst.Item1[1], 0, calcrst.Item1[2], 2);
-                                    Robot_1_Link.RobotWriteP(167, calcrst.Item2[0], calcrst.Item2[1], 0, calcrst.Item2[2], 2);
-                                    Robot_1_Link.RobotWriteP(168, calcrst.Item3[0], calcrst.Item3[1], 0, calcrst.Item3[2], 2);
+                                    Robot_1_Link.RobotWriteP(167, calcrst.Item1[0], calcrst.Item1[1], 0, calcrst.Item1[2], 2);
+                                    Robot_1_Link.RobotWriteP(168, calcrst.Item2[0], calcrst.Item2[1], 0, calcrst.Item2[2], 2);
+                                    Robot_1_Link.RobotWriteP(169, calcrst.Item3[0], calcrst.Item3[1], 0, calcrst.Item3[2], 2);
                                 }
                                 else
                                 {
                                     Robot_1_Link.RobotWriteM(211, new int[] { 1 });
-                                    Robot_1_Link.RobotWriteP(168, 0, 0, 0, 0, 2);
                                     Robot_1_Link.RobotWriteP(167, 0, 0, 0, 0, 2);
                                     Robot_1_Link.RobotWriteP(168, 0, 0, 0, 0, 2);
+                                    Robot_1_Link.RobotWriteP(169, 0, 0, 0, 0, 2);
                                 }
                                 Robot_1_Link.RobotWriteM(203, new int[] { 0 });
                             }
@@ -1332,9 +1347,9 @@ namespace HZTrayPlaceMachine.ViewModels
                                 for (int j = 0; j < 3; j++)
                                 {
                                     double[] p = Robot_1_Link.RobotReadP(139 + j + 4 * i);
-                                    Points[i * 3 + j].X = p[0];
-                                    Points[i * 3 + j].Y = p[1];
-                                    Points[i * 3 + j].U = p[3];
+                                    Points[i * 3 + j + 4].X = p[0];
+                                    Points[i * 3 + j + 4].Y = p[1];
+                                    Points[i * 3 + j + 4].U = p[3];
                                     //System.Threading.Thread.Sleep(50);
                                 }
                             }
