@@ -1012,7 +1012,7 @@ namespace HZTrayPlaceMachine.ViewModels
             ModbusTCP_Client.ModbusStateChanged += ModbusTCP_Client_ModbusStateChanged;
             ModbusTCP_Client.ConnectStateChanged += ModbusTCP_Client_ConnectStateChanged;
 
-            WindowTitle = "HZTrayPlaceMachine20200614";
+            WindowTitle = "HZTrayPlaceMachine20200712";
             IsLogin = false;
             LoginMenuItemHeader = "登录";
             MessageStr = "";
