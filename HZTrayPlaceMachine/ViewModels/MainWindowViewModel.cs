@@ -232,7 +232,16 @@ namespace HZTrayPlaceMachine.ViewModels
                 this.RaisePropertyChanged("PointsPageVisibility");
             }
         }
-
+        private ObservableCollection<bool> radioButtonIsChecked;
+        public ObservableCollection<bool> RadioButtonIsChecked
+        {
+            get { return radioButtonIsChecked; }
+            set
+            {
+                radioButtonIsChecked = value;
+                this.RaisePropertyChanged("RadioButtonIsChecked");
+            }
+        }
         #endregion
         #region 方法绑定
         public DelegateCommand AppLoadedEventCommand { get; set; }
@@ -247,6 +256,9 @@ namespace HZTrayPlaceMachine.ViewModels
         public DelegateCommand LineCommand { get; set; }
         public DelegateCommand RegionCommand { get; set; }
         public DelegateCommand RecognizeCommand { get; set; }
+        public DelegateCommand ShapeModel2Command { get; set; }
+        public DelegateCommand Line2Command { get; set; }
+        public DelegateCommand Region2Command { get; set; }
         public DelegateCommand CalibCommand { get; set; }
         public DelegateCommand UpdatePointsCommand { get; set; }
         #endregion
@@ -279,6 +291,9 @@ namespace HZTrayPlaceMachine.ViewModels
             LineCommand = new DelegateCommand(new Action(this.LineCommandExecute));
             RegionCommand = new DelegateCommand(new Action(this.RegionCommandExecute));
             RecognizeCommand = new DelegateCommand(new Action(this.RecognizeCommandExecute));
+            ShapeModel2Command = new DelegateCommand(new Action(this.ShapeModel2CommandExecute));
+            Line2Command = new DelegateCommand(new Action(this.Line2CommandExecute));
+            Region2Command = new DelegateCommand(new Action(this.Region2CommandExecute));
             CalibCommand = new DelegateCommand(new Action(this.CalibCommandExecute));
             UpdatePointsCommand = new DelegateCommand(new Action(this.UpdatePointsCommandExecute));
             Init();
@@ -508,6 +523,56 @@ namespace HZTrayPlaceMachine.ViewModels
                 HalconWindowVisibility = "Visible";
             }
         }
+        private async void ShapeModel2CommandExecute()
+        {
+            metro.ChangeAccent("Light.Red");
+            HalconWindowVisibility = "Collapsed";
+            bool r = await metro.ShowConfirm("确认", "确认要重新画模板2吗？");
+            if (r)
+            {
+                string path = "";
+                switch (SelectIndexValue)
+                {
+                    case 0:
+                        path = Path.Combine(System.Environment.CurrentDirectory, @"Camera\1");
+                        break;
+                    case 1:
+                        path = Path.Combine(System.Environment.CurrentDirectory, @"Camera\2");
+                        break;
+                    case 2:
+                        path = Path.Combine(System.Environment.CurrentDirectory, @"Camera\3");
+                        break;
+                    case 3:
+                        path = Path.Combine(System.Environment.CurrentDirectory, @"Camera\4");
+                        break;
+                    default:
+                        break;
+                }
+                metro.ChangeAccent("Light.Blue");
+                HalconWindowVisibility = "Visible";
+                CameraAppendHObject = null;
+                CameraGCStyle = new Tuple<string, object>("Color", "green");
+                ROI roi = Global.CameraImageViewer.DrawROI(ROI.ROI_TYPE_REGION);
+                HObject ReduceDomainImage;
+                HOperatorSet.ReduceDomain(CameraIamge, roi.getRegion(), out ReduceDomainImage);
+                HObject modelImages, modelRegions;
+                HOperatorSet.InspectShapeModel(ReduceDomainImage, out modelImages, out modelRegions, 7, 30);
+                HObject objectSelected;
+                HOperatorSet.SelectObj(modelRegions, out objectSelected, 1);
+                CameraAppendHObject = objectSelected;
+                HOperatorSet.WriteRegion(objectSelected, Path.Combine(path, "ModelRegion2.hobj"));
+                HTuple ModelID;
+                HOperatorSet.CreateShapeModel(ReduceDomainImage, 7, (new HTuple(-45)).TupleRad(), (new HTuple(90)).TupleRad(), (new HTuple(0.1)).TupleRad(), "no_pregeneration", "use_polarity", 30, 10, out ModelID);
+                HOperatorSet.WriteShapeModel(ModelID, Path.Combine(path, "ShapeModel2.shm"));
+                CameraIamge.WriteImage("bmp", 0, Path.Combine(path, "ModelImage2.bmp"));
+                AddMessage("创建模板2完成");
+            }
+            else
+            {
+                metro.ChangeAccent("Light.Blue");
+                HalconWindowVisibility = "Visible";
+            }
+        }
         private async void LineCommandExecute()
         {
             metro.ChangeAccent("Light.Red");
@@ -541,6 +606,47 @@ namespace HZTrayPlaceMachine.ViewModels
                 CameraAppendHObject = roi.getRegion();
                 HOperatorSet.WriteRegion(roi.getRegion(), Path.Combine(path, "Line.hobj"));
                 AddMessage("画直线完成");
+
+            }
+            else
+            {
+                metro.ChangeAccent("Light.Blue");
+                HalconWindowVisibility = "Visible";
+            }
+        }
+        private async void Line2CommandExecute()
+        {
+            metro.ChangeAccent("Light.Red");
+            HalconWindowVisibility = "Collapsed";
+            bool r = await metro.ShowConfirm("确认", "确认要重新画直线2吗？");
+            if (r)
+            {
+                string path = "";
+                switch (SelectIndexValue)
+                {
+                    case 0:
+                        path = Path.Combine(System.Environment.CurrentDirectory, @"Camera\1");
+                        break;
+                    case 1:
+                        path = Path.Combine(System.Environment.CurrentDirectory, @"Camera\2");
+                        break;
+                    case 2:
+                        path = Path.Combine(System.Environment.CurrentDirectory, @"Camera\3");
+                        break;
+                    case 3:
+                        path = Path.Combine(System.Environment.CurrentDirectory, @"Camera\4");
+                        break;
+                    default:
+                        break;
+                }
+                metro.ChangeAccent("Light.Blue");
+                HalconWindowVisibility = "Visible";
+                CameraAppendHObject = null;
+                CameraGCStyle = new Tuple<string, object>("Color", "red");
+                ROI roi = Global.CameraImageViewer.DrawROI(ROI.ROI_TYPE_RECTANGLE2);
+                CameraAppendHObject = roi.getRegion();
+                HOperatorSet.WriteRegion(roi.getRegion(), Path.Combine(path, "Line2.hobj"));
+                AddMessage("画直线2完成");
 
             }
             else
@@ -590,9 +696,54 @@ namespace HZTrayPlaceMachine.ViewModels
                 HalconWindowVisibility = "Visible";
             }
         }
+        private async void Region2CommandExecute()
+        {
+            metro.ChangeAccent("Light.Red");
+            HalconWindowVisibility = "Collapsed";
+            bool r = await metro.ShowConfirm("确认", "确认要重新画区域2吗？");
+            if (r)
+            {
+                string path = "";
+                switch (SelectIndexValue)
+                {
+                    case 0:
+                        path = Path.Combine(System.Environment.CurrentDirectory, @"Camera\1");
+                        break;
+                    case 1:
+                        path = Path.Combine(System.Environment.CurrentDirectory, @"Camera\2");
+                        break;
+                    case 2:
+                        path = Path.Combine(System.Environment.CurrentDirectory, @"Camera\3");
+                        break;
+                    case 3:
+                        path = Path.Combine(System.Environment.CurrentDirectory, @"Camera\4");
+                        break;
+                    default:
+                        break;
+                }
+                metro.ChangeAccent("Light.Blue");
+                HalconWindowVisibility = "Visible";
+                CameraAppendHObject = null;
+                CameraGCStyle = new Tuple<string, object>("Color", "red");
+                ROI roi = Global.CameraImageViewer.DrawROI(ROI.ROI_TYPE_RECTANGLE1);
+                CameraAppendHObject = roi.getRegion();
+                HOperatorSet.WriteRegion(roi.getRegion(), Path.Combine(path, "Region2.hobj"));
+                AddMessage("画区域2完成");
+
+            }
+            else
+            {
+                metro.ChangeAccent("Light.Blue");
+                HalconWindowVisibility = "Visible";
+            }
+        }
         private void RecognizeCommandExecute()
         {
             var calcrst = RecognizeOperete(SelectIndexValue,CameraIamge);
+            AddMessage(calcrst.Item1[0].ToString("F2") + "," + calcrst.Item1[1].ToString("F2") + "," + calcrst.Item1[2].ToString("F2"));
+            AddMessage(calcrst.Item2[0].ToString("F2") + "," + calcrst.Item2[1].ToString("F2") + "," + calcrst.Item2[2].ToString("F2"));
+            AddMessage(calcrst.Item3[0].ToString("F2") + "," + calcrst.Item3[1].ToString("F2") + "," + calcrst.Item3[2].ToString("F2"));
+            calcrst = RecognizeOperete2(SelectIndexValue, CameraIamge);
             AddMessage(calcrst.Item1[0].ToString("F2") + "," + calcrst.Item1[1].ToString("F2") + "," + calcrst.Item1[2].ToString("F2"));
             AddMessage(calcrst.Item2[0].ToString("F2") + "," + calcrst.Item2[1].ToString("F2") + "," + calcrst.Item2[2].ToString("F2"));
             AddMessage(calcrst.Item3[0].ToString("F2") + "," + calcrst.Item3[1].ToString("F2") + "," + calcrst.Item3[2].ToString("F2"));
@@ -613,24 +764,7 @@ namespace HZTrayPlaceMachine.ViewModels
                     try
                     {
                         AddMessage("开始标定");
-                        string path = "";
-                        switch (SelectIndexValue)
-                        {
-                            case 0:
-                                path = Path.Combine(System.Environment.CurrentDirectory, @"Camera\1");
-                                break;
-                            case 1:
-                                path = Path.Combine(System.Environment.CurrentDirectory, @"Camera\2");
-                                break;
-                            case 2:
-                                path = Path.Combine(System.Environment.CurrentDirectory, @"Camera\3");
-                                break;
-                            case 3:
-                                path = Path.Combine(System.Environment.CurrentDirectory, @"Camera\4");
-                                break;
-                            default:
-                                break;
-                        }
+                        string path = Path.Combine(System.Environment.CurrentDirectory, @"Camera\1");
 
                         DXH.Net.DXHTCPClient Calib_Link = new DXH.Net.DXHTCPClient();
                         string Calib_IPAddress = Inifile.INIGetStringValue(iniParameterPath, "System", "CalibIP", "192.168.1.13");
@@ -815,7 +949,10 @@ namespace HZTrayPlaceMachine.ViewModels
                                 new HTuple(Array1[0][2] + delta_x).TupleConcat(Array1[1][2] + delta_x).TupleConcat(Array1[2][2] + delta_x).TupleConcat(Array1[3][2] + delta_x).TupleConcat(Array1[4][2] + delta_x).TupleConcat(Array1[5][2] + delta_x).TupleConcat(Array1[6][2] + delta_x).TupleConcat(Array1[7][2] + delta_x).TupleConcat(Array1[8][2] + delta_x),
                                 new HTuple(Array1[0][3] + delta_y).TupleConcat(Array1[1][3] + delta_y).TupleConcat(Array1[2][3] + delta_y).TupleConcat(Array1[3][3] + delta_y).TupleConcat(Array1[4][3] + delta_y).TupleConcat(Array1[5][3] + delta_y).TupleConcat(Array1[6][3] + delta_y).TupleConcat(Array1[7][3] + delta_y).TupleConcat(Array1[8][3] + delta_y)
                                 , out homMat2D);
-                            HOperatorSet.WriteTuple(homMat2D, Path.Combine(path, "homMat2D.tup"));
+                            HOperatorSet.WriteTuple(homMat2D, Path.Combine(Path.Combine(System.Environment.CurrentDirectory, @"Camera\1"), "homMat2D.tup"));
+                            HOperatorSet.WriteTuple(homMat2D, Path.Combine(Path.Combine(System.Environment.CurrentDirectory, @"Camera\2"), "homMat2D.tup"));
+                            HOperatorSet.WriteTuple(homMat2D, Path.Combine(Path.Combine(System.Environment.CurrentDirectory, @"Camera\3"), "homMat2D.tup"));
+                            HOperatorSet.WriteTuple(homMat2D, Path.Combine(Path.Combine(System.Environment.CurrentDirectory, @"Camera\4"), "homMat2D.tup"));
                             AddMessage("保存标定文件成功");
                         }
                         catch (Exception ex)
@@ -893,14 +1030,19 @@ namespace HZTrayPlaceMachine.ViewModels
             catch (Exception ex)
             {
                 Points = new ObservableCollection<Point>();
-                for (int i = 0; i < 16; i++)
+                for (int i = 0; i < 28; i++)
                 {
                     Points.Add(new Point());
                 }
                 AddMessage(ex.Message);
             }
-            
+            RadioButtonIsChecked = new ObservableCollection<bool>();
+            for (int i = 0; i < 4; i++)
+            {
+                RadioButtonIsChecked.Add(false);
+            }
             SelectIndexValue = 0;
+            RadioButtonIsChecked[SelectIndexValue] = true;
             CameraX = Points[0].X;
             CameraY = Points[0].Y;
             CameraU = Points[0].U;  
@@ -1004,23 +1146,23 @@ namespace HZTrayPlaceMachine.ViewModels
                 case 1:
                     path = Path.Combine(System.Environment.CurrentDirectory, @"Camera\2");
                     camerap = Points[1];
-                    targetp1 = Points[4]; targetp2 = Points[5]; targetp3 = Points[6];
+                    targetp1 = Points[10]; targetp2 = Points[11]; targetp3 = Points[12];
                     break;
                 case 2:
                     path = Path.Combine(System.Environment.CurrentDirectory, @"Camera\3");
                     camerap = Points[2];
-                    targetp1 = Points[7]; targetp2 = Points[8]; targetp3 = Points[9];
+                    targetp1 = Points[16]; targetp2 = Points[17]; targetp3 = Points[18];
                     break;
                 case 3:
                     path = Path.Combine(System.Environment.CurrentDirectory, @"Camera\4");
                     camerap = Points[3];
-                    targetp1 = Points[10]; targetp2 = Points[11]; targetp3 = Points[12];
+                    targetp1 = Points[22]; targetp2 = Points[23]; targetp3 = Points[24];
                     break;
                 case 0:
                 default:
                     path = Path.Combine(System.Environment.CurrentDirectory, @"Camera\1");
                     camerap = Points[0];
-                    targetp1 = Points[13]; targetp2 = Points[14]; targetp3 = Points[15];
+                    targetp1 = Points[4]; targetp2 = Points[5]; targetp3 = Points[6];
                     break;
             }
             try
@@ -1051,6 +1193,130 @@ namespace HZTrayPlaceMachine.ViewModels
                 #region 确认角度
                 HObject lineRegion;
                 HOperatorSet.ReadRegion(out lineRegion, Path.Combine(path, "Line.hobj"));
+                HObject imageReduced1;
+                HOperatorSet.ReduceDomain(ModelImage, lineRegion, out imageReduced1);
+                HObject edges1;
+                HOperatorSet.EdgesSubPix(imageReduced1, out edges1, "canny", 1, 20, 40);
+                HObject contoursSplit1;
+                HOperatorSet.SegmentContoursXld(edges1, out contoursSplit1, "lines_circles", 5, 4, 2);
+                HObject selectedContours1;
+                HOperatorSet.SelectContoursXld(contoursSplit1, out selectedContours1, "contour_length", 15, 500, -0.5, 0.5);
+                HObject unionContours1;
+                HOperatorSet.UnionAdjacentContoursXld(selectedContours1, out unionContours1, 10, 1, "attr_keep");
+                HTuple rowBegin1, colBegin1, rowEnd1, colEnd1, nr1, nc1, dist1;
+                HOperatorSet.FitLineContourXld(unionContours1, "tukey", -1, 0, 5, 2, out rowBegin1, out colBegin1, out rowEnd1, out colEnd1, out nr1, out nc1, out dist1);
+                HObject regionLine;
+                HOperatorSet.GenRegionLine(out regionLine, rowBegin1, colBegin1, rowEnd1, colEnd1);
+                var _index = FindMaxLine(regionLine);
+                double lineAngle1 = Math.Atan2((nc1.DArr[_index]), (nr1.DArr[_index])) * 180 / Math.PI - 90;
+
+                HObject regionLineAffineTrans;
+                HOperatorSet.AffineTransRegion(lineRegion, out regionLineAffineTrans, homMat2D, "nearest_neighbor");
+                HOperatorSet.ReduceDomain(image, regionLineAffineTrans, out imageReduced1);
+                HOperatorSet.EdgesSubPix(imageReduced1, out edges1, "canny", 1, 20, 40);
+                HOperatorSet.SegmentContoursXld(edges1, out contoursSplit1, "lines_circles", 5, 4, 2);
+                HOperatorSet.SelectContoursXld(contoursSplit1, out selectedContours1, "contour_length", 15, 500, -0.5, 0.5);
+                HOperatorSet.UnionAdjacentContoursXld(selectedContours1, out unionContours1, 10, 1, "attr_keep");
+                HOperatorSet.FitLineContourXld(unionContours1, "tukey", -1, 0, 5, 2, out rowBegin1, out colBegin1, out rowEnd1, out colEnd1, out nr1, out nc1, out dist1);
+                HOperatorSet.GenRegionLine(out regionLine, rowBegin1, colBegin1, rowEnd1, colEnd1);
+                CameraAppendHObject = regionLine;
+                _index = FindMaxLine(regionLine);
+                double lineAngle2 = Math.Atan2((nc1.DArr[_index]), (nr1.DArr[_index])) * 180 / Math.PI - 90;
+                #endregion
+                #region 坐标换算
+                HOperatorSet.ReadTuple(Path.Combine(path, "homMat2D.tup"), out homMat2D);
+                HTuple CamImage_x, CamImage_y;
+                HOperatorSet.AffineTransPoint2d(homMat2D, row, column, out CamImage_x, out CamImage_y);
+                HTuple CamImage_x1, CamImage_y1;
+                HOperatorSet.AffineTransPoint2d(homMat2D, row1, column1, out CamImage_x1, out CamImage_y1);
+                HTuple T2;
+                HOperatorSet.VectorAngleToRigid(CamImage_x1, CamImage_y1, new HTuple(lineAngle2 * -1).TupleRad(), CamImage_x, CamImage_y, new HTuple(lineAngle1 * -1).TupleRad(), out T2);//T2是新料移动到模板料位置的变换
+                HTuple T1;
+                HOperatorSet.VectorAngleToRigid(camerap.X, camerap.Y, new HTuple(camerap.U).TupleRad(), targetp1.X, targetp1.Y, new HTuple(targetp1.U).TupleRad(), out T1);//T1是拍照位置移动到贴合位置的变换
+                HTuple CamRobot_x1, CamRobot_y1;
+                HOperatorSet.AffineTransPoint2d(T2, camerap.X, camerap.Y, out CamRobot_x1, out CamRobot_y1);//移动到新料与模板料重合
+                HTuple FitRobot_x1, FitRobot_y1;
+                HOperatorSet.AffineTransPoint2d(T1, CamRobot_x1, CamRobot_y1, out FitRobot_x1, out FitRobot_y1);//移动到贴合位置
+                double[] resultP1 = new double[3] { FitRobot_x1.D - targetp1.X, FitRobot_y1.D - targetp1.Y, (lineAngle1 - lineAngle2) * -1 };
+                HOperatorSet.VectorAngleToRigid(camerap.X, camerap.Y, new HTuple(camerap.U).TupleRad(), targetp2.X, targetp2.Y, new HTuple(targetp2.U).TupleRad(), out T1);
+                HOperatorSet.AffineTransPoint2d(T1, CamRobot_x1, CamRobot_y1, out FitRobot_x1, out FitRobot_y1);
+                double[] resultP2 = new double[3] { FitRobot_x1.D - targetp2.X, FitRobot_y1.D - targetp2.Y, (lineAngle1 - lineAngle2) * -1 };
+                HOperatorSet.VectorAngleToRigid(camerap.X, camerap.Y, new HTuple(camerap.U).TupleRad(), targetp3.X, targetp3.Y, new HTuple(targetp3.U).TupleRad(), out T1);
+                HOperatorSet.AffineTransPoint2d(T1, CamRobot_x1, CamRobot_y1, out FitRobot_x1, out FitRobot_y1);
+                double[] resultP3 = new double[3] { FitRobot_x1.D - targetp3.X, FitRobot_y1.D - targetp3.Y, (lineAngle1 - lineAngle2) * -1 };
+                #endregion
+                #region 范围
+                bool result = true;
+                if (Math.Abs(resultP1[0]) > 10 || Math.Abs(resultP1[1]) > 10 || Math.Abs(resultP2[0]) > 10 || Math.Abs(resultP2[1]) > 10 || Math.Abs(resultP3[0]) > 10 || Math.Abs(resultP3[1]) > 10 || Math.Abs(lineAngle1 - lineAngle2) > 15)
+                {
+                    result = false;
+                }
+                #endregion
+                return new Tuple<double[], double[], double[], bool>(resultP1, resultP2, resultP3, result);
+            }
+            catch (Exception ex)
+            {
+                AddMessage(ex.Message);
+                return new Tuple<double[], double[], double[], bool>(new double[3] { 0, 0, 0 }, new double[3] { 0, 0, 0 }, new double[3] { 0, 0, 0 }, false);
+            }
+
+        }
+        private Tuple<double[], double[], double[], bool> RecognizeOperete2(int index, HImage image)
+        {
+            string path = "";
+            Point camerap, targetp1, targetp2, targetp3;
+            switch (index)
+            {
+                case 1:
+                    path = Path.Combine(System.Environment.CurrentDirectory, @"Camera\2");
+                    camerap = Points[1];
+                    targetp1 = Points[13]; targetp2 = Points[14]; targetp3 = Points[15];
+                    break;
+                case 2:
+                    path = Path.Combine(System.Environment.CurrentDirectory, @"Camera\3");
+                    camerap = Points[2];
+                    targetp1 = Points[19]; targetp2 = Points[20]; targetp3 = Points[21];
+                    break;
+                case 3:
+                    path = Path.Combine(System.Environment.CurrentDirectory, @"Camera\4");
+                    camerap = Points[3];
+                    targetp1 = Points[25]; targetp2 = Points[26]; targetp3 = Points[27];
+                    break;
+                case 0:
+                default:
+                    path = Path.Combine(System.Environment.CurrentDirectory, @"Camera\1");
+                    camerap = Points[0];
+                    targetp1 = Points[7]; targetp2 = Points[8]; targetp3 = Points[9];
+                    break;
+            }
+            try
+            {
+                #region 找模板
+                HObject ModelImage;
+                HOperatorSet.ReadImage(out ModelImage, Path.Combine(path, "ModelImage2.bmp"));
+                HTuple ModelID, row, column, angle, score, row1, column1, angle1, score1;
+                HOperatorSet.ReadShapeModel(Path.Combine(path, "ShapeModel2.shm"), out ModelID);
+                HObject ImageRegion;
+                HOperatorSet.ReadRegion(out ImageRegion, Path.Combine(path, "Region2.hobj"));
+                HObject ImageReduced;
+                HOperatorSet.ReduceDomain(ModelImage, ImageRegion, out ImageReduced);
+                HOperatorSet.FindShapeModel(ImageReduced, ModelID, (new HTuple(-45)).TupleRad(), (new HTuple(90)).TupleRad(), 0.5, 1, 0, "least_squares", 0, 0.9, out row, out column, out angle, out score);
+                HOperatorSet.ReduceDomain(image, ImageRegion, out ImageReduced);
+                HOperatorSet.FindShapeModel(ImageReduced, ModelID, (new HTuple(-45)).TupleRad(), (new HTuple(90)).TupleRad(), 0.5, 1, 0, "least_squares", 0, 0.9, out row1, out column1, out angle1, out score1);
+                HTuple homMat2D;
+                HOperatorSet.VectorAngleToRigid(row, column, angle, row1, column1, angle1, out homMat2D);
+                HObject modelRegion;
+                HOperatorSet.ReadRegion(out modelRegion, Path.Combine(path, "ModelRegion2.hobj"));
+                HObject regionAffineTrans;
+                HOperatorSet.AffineTransRegion(modelRegion, out regionAffineTrans, homMat2D, "nearest_neighbor");
+                CameraGCStyle = new Tuple<string, object>("Color", "green");
+                CameraAppendHObject = null;
+                CameraAppendHObject = regionAffineTrans;
+                AddMessage("找到模板2: Row:" + row1.D.ToString("F0") + " Column:" + column1.D.ToString("F0") + " Angle:" + angle1.TupleDeg().D.ToString("F2") + " Score:" + score1.D.ToString("F1"));
+                #endregion
+                #region 确认角度
+                HObject lineRegion;
+                HOperatorSet.ReadRegion(out lineRegion, Path.Combine(path, "Line2.hobj"));
                 HObject imageReduced1;
                 HOperatorSet.ReduceDomain(ModelImage, lineRegion, out imageReduced1);
                 HObject edges1;
@@ -1230,100 +1496,188 @@ namespace HZTrayPlaceMachine.ViewModels
                             if (CCDCmd[0] == 1)
                             {
                                 AddMessage("位置1触发");
+                                SelectIndexValue = 0;
+                                RadioButtonIsChecked[SelectIndexValue] = true;
                                 cameraOperate.GrabImageVoid(0);
                                 CameraIamge = cameraOperate.CurrentImage;
                                 var calcrst = RecognizeOperete(0, CameraIamge);
                                 AddMessage(calcrst.Item1[0].ToString("F2") + "," + calcrst.Item1[1].ToString("F2") + "," + calcrst.Item1[2].ToString("F2"));
                                 AddMessage(calcrst.Item2[0].ToString("F2") + "," + calcrst.Item2[1].ToString("F2") + "," + calcrst.Item2[2].ToString("F2"));
                                 AddMessage(calcrst.Item3[0].ToString("F2") + "," + calcrst.Item3[1].ToString("F2") + "," + calcrst.Item3[2].ToString("F2"));
-                                if (calcrst.Item4)
+                                var calcrst2 = RecognizeOperete2(0, CameraIamge);
+                                AddMessage(calcrst2.Item1[0].ToString("F2") + "," + calcrst2.Item1[1].ToString("F2") + "," + calcrst2.Item1[2].ToString("F2"));
+                                AddMessage(calcrst2.Item2[0].ToString("F2") + "," + calcrst2.Item2[1].ToString("F2") + "," + calcrst2.Item2[2].ToString("F2"));
+                                AddMessage(calcrst2.Item3[0].ToString("F2") + "," + calcrst2.Item3[1].ToString("F2") + "," + calcrst2.Item3[2].ToString("F2"));
+                                if (calcrst.Item4 || calcrst2.Item4)
                                 {
                                     Robot_1_Link.RobotWriteM(210, new int[] { 1 });
-                                    Robot_1_Link.RobotWriteP(155, calcrst.Item1[0], calcrst.Item1[1], 0, calcrst.Item1[2], 2);
-                                    Robot_1_Link.RobotWriteP(156, calcrst.Item2[0], calcrst.Item2[1], 0, calcrst.Item2[2], 2);
-                                    Robot_1_Link.RobotWriteP(157, calcrst.Item3[0], calcrst.Item3[1], 0, calcrst.Item3[2], 2);
+                                }
+                                if (calcrst.Item4)
+                                {
+                                    Robot_1_Link.RobotWriteP(165, calcrst.Item1[0], calcrst.Item1[1], 0, calcrst.Item1[2], 2);
+                                    Robot_1_Link.RobotWriteP(166, calcrst.Item2[0], calcrst.Item2[1], 0, calcrst.Item2[2], 2);
+                                    Robot_1_Link.RobotWriteP(167, calcrst.Item3[0], calcrst.Item3[1], 0, calcrst.Item3[2], 2);
                                 }
                                 else
                                 {
                                     Robot_1_Link.RobotWriteM(211, new int[] { 1 });
-                                    Robot_1_Link.RobotWriteP(155, 0, 0, 0, 0, 2);
-                                    Robot_1_Link.RobotWriteP(156, 0, 0, 0, 0, 2);
-                                    Robot_1_Link.RobotWriteP(157, 0, 0, 0, 0, 2);
+                                    Robot_1_Link.RobotWriteP(165, 0, 0, 0, 0, 2);
+                                    Robot_1_Link.RobotWriteP(166, 0, 0, 0, 0, 2);
+                                    Robot_1_Link.RobotWriteP(167, 0, 0, 0, 0, 2);
+                                }
+                                if (calcrst2.Item4)
+                                {
+                                    Robot_1_Link.RobotWriteP(168, calcrst2.Item1[0], calcrst2.Item1[1], 0, calcrst2.Item1[2], 2);
+                                    Robot_1_Link.RobotWriteP(169, calcrst2.Item2[0], calcrst2.Item2[1], 0, calcrst2.Item2[2], 2);
+                                    Robot_1_Link.RobotWriteP(170, calcrst2.Item3[0], calcrst2.Item3[1], 0, calcrst2.Item3[2], 2);
+                                }
+                                else
+                                {
+                                    Robot_1_Link.RobotWriteM(212, new int[] { 1 });
+                                    Robot_1_Link.RobotWriteP(168, 0, 0, 0, 0, 2);
+                                    Robot_1_Link.RobotWriteP(169, 0, 0, 0, 0, 2);
+                                    Robot_1_Link.RobotWriteP(170, 0, 0, 0, 0, 2);
                                 }
                                 Robot_1_Link.RobotWriteM(200, new int[] { 0 });
                             }
                             if (CCDCmd[1] == 1)
                             {
                                 AddMessage("位置2触发");
+                                SelectIndexValue = 1;
+                                RadioButtonIsChecked[SelectIndexValue] = true;
                                 cameraOperate.GrabImageVoid(0);
                                 CameraIamge = cameraOperate.CurrentImage;
                                 var calcrst = RecognizeOperete(1, CameraIamge);
                                 AddMessage(calcrst.Item1[0].ToString("F2") + "," + calcrst.Item1[1].ToString("F2") + "," + calcrst.Item1[2].ToString("F2"));
                                 AddMessage(calcrst.Item2[0].ToString("F2") + "," + calcrst.Item2[1].ToString("F2") + "," + calcrst.Item2[2].ToString("F2"));
                                 AddMessage(calcrst.Item3[0].ToString("F2") + "," + calcrst.Item3[1].ToString("F2") + "," + calcrst.Item3[2].ToString("F2"));
-                                if (calcrst.Item4)
+                                var calcrst2 = RecognizeOperete2(1, CameraIamge);
+                                AddMessage(calcrst2.Item1[0].ToString("F2") + "," + calcrst2.Item1[1].ToString("F2") + "," + calcrst2.Item1[2].ToString("F2"));
+                                AddMessage(calcrst2.Item2[0].ToString("F2") + "," + calcrst2.Item2[1].ToString("F2") + "," + calcrst2.Item2[2].ToString("F2"));
+                                AddMessage(calcrst2.Item3[0].ToString("F2") + "," + calcrst2.Item3[1].ToString("F2") + "," + calcrst2.Item3[2].ToString("F2"));
+                                if (calcrst.Item4 || calcrst2.Item4)
                                 {
                                     Robot_1_Link.RobotWriteM(210, new int[] { 1 });
-                                    Robot_1_Link.RobotWriteP(159, calcrst.Item1[0], calcrst.Item1[1], 0, calcrst.Item1[2], 2);
-                                    Robot_1_Link.RobotWriteP(160, calcrst.Item2[0], calcrst.Item2[1], 0, calcrst.Item2[2], 2);
-                                    Robot_1_Link.RobotWriteP(161, calcrst.Item3[0], calcrst.Item3[1], 0, calcrst.Item3[2], 2);
+                                }
+                                if (calcrst.Item4)
+                                {
+                                    Robot_1_Link.RobotWriteP(171, calcrst.Item1[0], calcrst.Item1[1], 0, calcrst.Item1[2], 2);
+                                    Robot_1_Link.RobotWriteP(172, calcrst.Item2[0], calcrst.Item2[1], 0, calcrst.Item2[2], 2);
+                                    Robot_1_Link.RobotWriteP(173, calcrst.Item3[0], calcrst.Item3[1], 0, calcrst.Item3[2], 2);
                                 }
                                 else
                                 {
-                                    Robot_1_Link.RobotWriteM(211, new int[] { 1 });
-                                    Robot_1_Link.RobotWriteP(159, 0, 0, 0, 0, 2);
-                                    Robot_1_Link.RobotWriteP(160, 0, 0, 0, 0, 2);
-                                    Robot_1_Link.RobotWriteP(161, 0, 0, 0, 0, 2);
+                                    Robot_1_Link.RobotWriteM(213, new int[] { 1 });
+                                    Robot_1_Link.RobotWriteP(171, 0, 0, 0, 0, 2);
+                                    Robot_1_Link.RobotWriteP(172, 0, 0, 0, 0, 2);
+                                    Robot_1_Link.RobotWriteP(173, 0, 0, 0, 0, 2);
+                                }
+                                if (calcrst2.Item4)
+                                {
+                                    Robot_1_Link.RobotWriteP(174, calcrst2.Item1[0], calcrst2.Item1[1], 0, calcrst2.Item1[2], 2);
+                                    Robot_1_Link.RobotWriteP(175, calcrst2.Item2[0], calcrst2.Item2[1], 0, calcrst2.Item2[2], 2);
+                                    Robot_1_Link.RobotWriteP(176, calcrst2.Item3[0], calcrst2.Item3[1], 0, calcrst2.Item3[2], 2);
+                                }
+                                else
+                                {
+                                    Robot_1_Link.RobotWriteM(214, new int[] { 1 });
+                                    Robot_1_Link.RobotWriteP(174, 0, 0, 0, 0, 2);
+                                    Robot_1_Link.RobotWriteP(175, 0, 0, 0, 0, 2);
+                                    Robot_1_Link.RobotWriteP(176, 0, 0, 0, 0, 2);
                                 }
                                 Robot_1_Link.RobotWriteM(201, new int[] { 0 });
                             }
                             if (CCDCmd[2] == 1)
                             {
                                 AddMessage("位置3触发");
+                                SelectIndexValue = 2;
+                                RadioButtonIsChecked[SelectIndexValue] = true;
                                 cameraOperate.GrabImageVoid(0);
                                 CameraIamge = cameraOperate.CurrentImage;
                                 var calcrst = RecognizeOperete(2, CameraIamge);
                                 AddMessage(calcrst.Item1[0].ToString("F2") + "," + calcrst.Item1[1].ToString("F2") + "," + calcrst.Item1[2].ToString("F2"));
                                 AddMessage(calcrst.Item2[0].ToString("F2") + "," + calcrst.Item2[1].ToString("F2") + "," + calcrst.Item2[2].ToString("F2"));
                                 AddMessage(calcrst.Item3[0].ToString("F2") + "," + calcrst.Item3[1].ToString("F2") + "," + calcrst.Item3[2].ToString("F2"));
-                                if (calcrst.Item4)
+                                var calcrst2 = RecognizeOperete2(2, CameraIamge);
+                                AddMessage(calcrst2.Item1[0].ToString("F2") + "," + calcrst2.Item1[1].ToString("F2") + "," + calcrst2.Item1[2].ToString("F2"));
+                                AddMessage(calcrst2.Item2[0].ToString("F2") + "," + calcrst2.Item2[1].ToString("F2") + "," + calcrst2.Item2[2].ToString("F2"));
+                                AddMessage(calcrst2.Item3[0].ToString("F2") + "," + calcrst2.Item3[1].ToString("F2") + "," + calcrst2.Item3[2].ToString("F2"));
+                                if (calcrst.Item4 || calcrst2.Item4)
                                 {
                                     Robot_1_Link.RobotWriteM(210, new int[] { 1 });
-                                    Robot_1_Link.RobotWriteP(163, calcrst.Item1[0], calcrst.Item1[1], 0, calcrst.Item1[2], 2);
-                                    Robot_1_Link.RobotWriteP(164, calcrst.Item2[0], calcrst.Item2[1], 0, calcrst.Item2[2], 2);
-                                    Robot_1_Link.RobotWriteP(165, calcrst.Item3[0], calcrst.Item3[1], 0, calcrst.Item3[2], 2);
+                                }
+                                if (calcrst.Item4)
+                                {
+                                    Robot_1_Link.RobotWriteP(177, calcrst.Item1[0], calcrst.Item1[1], 0, calcrst.Item1[2], 2);
+                                    Robot_1_Link.RobotWriteP(178, calcrst.Item2[0], calcrst.Item2[1], 0, calcrst.Item2[2], 2);
+                                    Robot_1_Link.RobotWriteP(179, calcrst.Item3[0], calcrst.Item3[1], 0, calcrst.Item3[2], 2);
                                 }
                                 else
                                 {
-                                    Robot_1_Link.RobotWriteM(211, new int[] { 1 });
-                                    Robot_1_Link.RobotWriteP(163, 0, 0, 0, 0, 2);
-                                    Robot_1_Link.RobotWriteP(164, 0, 0, 0, 0, 2);
-                                    Robot_1_Link.RobotWriteP(165, 0, 0, 0, 0, 2);
+                                    Robot_1_Link.RobotWriteM(215, new int[] { 1 });
+                                    Robot_1_Link.RobotWriteP(177, 0, 0, 0, 0, 2);
+                                    Robot_1_Link.RobotWriteP(178, 0, 0, 0, 0, 2);
+                                    Robot_1_Link.RobotWriteP(179, 0, 0, 0, 0, 2);
+                                }
+                                if (calcrst2.Item4)
+                                {
+                                    Robot_1_Link.RobotWriteP(180, calcrst2.Item1[0], calcrst2.Item1[1], 0, calcrst2.Item1[2], 2);
+                                    Robot_1_Link.RobotWriteP(181, calcrst2.Item2[0], calcrst2.Item2[1], 0, calcrst2.Item2[2], 2);
+                                    Robot_1_Link.RobotWriteP(182, calcrst2.Item3[0], calcrst2.Item3[1], 0, calcrst2.Item3[2], 2);
+                                }
+                                else
+                                {
+                                    Robot_1_Link.RobotWriteM(216, new int[] { 1 });
+                                    Robot_1_Link.RobotWriteP(180, 0, 0, 0, 0, 2);
+                                    Robot_1_Link.RobotWriteP(181, 0, 0, 0, 0, 2);
+                                    Robot_1_Link.RobotWriteP(182, 0, 0, 0, 0, 2);
                                 }
                                 Robot_1_Link.RobotWriteM(202, new int[] { 0 });
                             }
                             if (CCDCmd[3] == 1)
                             {
                                 AddMessage("位置4触发");
+                                SelectIndexValue = 3;
+                                RadioButtonIsChecked[SelectIndexValue] = true;
                                 cameraOperate.GrabImageVoid(0);
                                 CameraIamge = cameraOperate.CurrentImage;
                                 var calcrst = RecognizeOperete(3, CameraIamge);
                                 AddMessage(calcrst.Item1[0].ToString("F2") + "," + calcrst.Item1[1].ToString("F2") + "," + calcrst.Item1[2].ToString("F2"));
                                 AddMessage(calcrst.Item2[0].ToString("F2") + "," + calcrst.Item2[1].ToString("F2") + "," + calcrst.Item2[2].ToString("F2"));
                                 AddMessage(calcrst.Item3[0].ToString("F2") + "," + calcrst.Item3[1].ToString("F2") + "," + calcrst.Item3[2].ToString("F2"));
-                                if (calcrst.Item4)
+                                var calcrst2 = RecognizeOperete2(3, CameraIamge);
+                                AddMessage(calcrst2.Item1[0].ToString("F2") + "," + calcrst2.Item1[1].ToString("F2") + "," + calcrst2.Item1[2].ToString("F2"));
+                                AddMessage(calcrst2.Item2[0].ToString("F2") + "," + calcrst2.Item2[1].ToString("F2") + "," + calcrst2.Item2[2].ToString("F2"));
+                                AddMessage(calcrst2.Item3[0].ToString("F2") + "," + calcrst2.Item3[1].ToString("F2") + "," + calcrst2.Item3[2].ToString("F2"));
+                                if (calcrst.Item4 || calcrst2.Item4)
                                 {
                                     Robot_1_Link.RobotWriteM(210, new int[] { 1 });
-                                    Robot_1_Link.RobotWriteP(167, calcrst.Item1[0], calcrst.Item1[1], 0, calcrst.Item1[2], 2);
-                                    Robot_1_Link.RobotWriteP(168, calcrst.Item2[0], calcrst.Item2[1], 0, calcrst.Item2[2], 2);
-                                    Robot_1_Link.RobotWriteP(169, calcrst.Item3[0], calcrst.Item3[1], 0, calcrst.Item3[2], 2);
+                                }
+                                if (calcrst.Item4)
+                                {
+                                    Robot_1_Link.RobotWriteP(183, calcrst.Item1[0], calcrst.Item1[1], 0, calcrst.Item1[2], 2);
+                                    Robot_1_Link.RobotWriteP(184, calcrst.Item2[0], calcrst.Item2[1], 0, calcrst.Item2[2], 2);
+                                    Robot_1_Link.RobotWriteP(185, calcrst.Item3[0], calcrst.Item3[1], 0, calcrst.Item3[2], 2);
                                 }
                                 else
                                 {
-                                    Robot_1_Link.RobotWriteM(211, new int[] { 1 });
-                                    Robot_1_Link.RobotWriteP(167, 0, 0, 0, 0, 2);
-                                    Robot_1_Link.RobotWriteP(168, 0, 0, 0, 0, 2);
-                                    Robot_1_Link.RobotWriteP(169, 0, 0, 0, 0, 2);
+                                    Robot_1_Link.RobotWriteM(217, new int[] { 1 });
+                                    Robot_1_Link.RobotWriteP(183, 0, 0, 0, 0, 2);
+                                    Robot_1_Link.RobotWriteP(184, 0, 0, 0, 0, 2);
+                                    Robot_1_Link.RobotWriteP(185, 0, 0, 0, 0, 2);
+                                }
+                                if (calcrst2.Item4)
+                                {
+                                    Robot_1_Link.RobotWriteP(186, calcrst2.Item1[0], calcrst2.Item1[1], 0, calcrst2.Item1[2], 2);
+                                    Robot_1_Link.RobotWriteP(187, calcrst2.Item2[0], calcrst2.Item2[1], 0, calcrst2.Item2[2], 2);
+                                    Robot_1_Link.RobotWriteP(188, calcrst2.Item3[0], calcrst2.Item3[1], 0, calcrst2.Item3[2], 2);
+                                }
+                                else
+                                {
+                                    Robot_1_Link.RobotWriteM(220, new int[] { 1 });
+                                    Robot_1_Link.RobotWriteP(186, 0, 0, 0, 0, 2);
+                                    Robot_1_Link.RobotWriteP(187, 0, 0, 0, 0, 2);
+                                    Robot_1_Link.RobotWriteP(188, 0, 0, 0, 0, 2);
                                 }
                                 Robot_1_Link.RobotWriteM(203, new int[] { 0 });
                             }
@@ -1344,12 +1698,12 @@ namespace HZTrayPlaceMachine.ViewModels
                             //目标位
                             for (int i = 0; i < 4; i++)
                             {
-                                for (int j = 0; j < 3; j++)
+                                for (int j = 0; j < 6; j++)
                                 {
-                                    double[] p = Robot_1_Link.RobotReadP(139 + j + 4 * i);
-                                    Points[i * 3 + j + 4].X = p[0];
-                                    Points[i * 3 + j + 4].Y = p[1];
-                                    Points[i * 3 + j + 4].U = p[3];
+                                    double[] p = Robot_1_Link.RobotReadP(139 + j + 6 * i);
+                                    Points[i * 6 + j + 4].X = p[0];
+                                    Points[i * 6 + j + 4].Y = p[1];
+                                    Points[i * 6 + j + 4].U = p[3];
                                     //System.Threading.Thread.Sleep(50);
                                 }
                             }

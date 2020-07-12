@@ -41,14 +41,15 @@
             </Grid>
             <Grid Grid.Row="1" Style="{StaticResource GridLoginStatus}">
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <RadioButton Content="Ⅰ" Command="{Binding SelectIndexCommand}" CommandParameter="0" IsChecked="True"></RadioButton>
-                    <RadioButton Content="Ⅱ" Command="{Binding SelectIndexCommand}" CommandParameter="1"></RadioButton>
-                    <RadioButton Content="Ⅲ" Command="{Binding SelectIndexCommand}" CommandParameter="2"></RadioButton>
-                    <RadioButton Content="Ⅳ" Command="{Binding SelectIndexCommand}" CommandParameter="3"></RadioButton>
+                    <RadioButton Content="Ⅰ" Command="{Binding SelectIndexCommand}" CommandParameter="0" IsChecked="{Binding RadioButtonIsChecked[0],Mode=TwoWay}"></RadioButton>
+                    <RadioButton Content="Ⅱ" Command="{Binding SelectIndexCommand}" CommandParameter="1" IsChecked="{Binding RadioButtonIsChecked[1],Mode=TwoWay}"></RadioButton>
+                    <RadioButton Content="Ⅲ" Command="{Binding SelectIndexCommand}" CommandParameter="2" IsChecked="{Binding RadioButtonIsChecked[2],Mode=TwoWay}"></RadioButton>
+                    <RadioButton Content="Ⅳ" Command="{Binding SelectIndexCommand}" CommandParameter="3" IsChecked="{Binding RadioButtonIsChecked[3],Mode=TwoWay}"></RadioButton>
                 </StackPanel>
             </Grid>
             <Grid Grid.Row="2" Style="{StaticResource GridLoginStatus}">
                 <Grid.RowDefinitions>
+                    <RowDefinition></RowDefinition>
                     <RowDefinition></RowDefinition>
                     <RowDefinition></RowDefinition>
                     <RowDefinition></RowDefinition>
@@ -60,20 +61,26 @@
                     <ColumnDefinition></ColumnDefinition>
                     <ColumnDefinition></ColumnDefinition>
                 </Grid.ColumnDefinitions>
-                <Button Grid.Column="1" Style="{StaticResource MahApps.Styles.Button.Square.Accent}" Margin="10" Content="模板" FontSize="24" Command="{Binding ShapeModelCommand}"></Button>
-                <Button Grid.Column="2" Style="{StaticResource MahApps.Styles.Button.Square.Accent}" Margin="10" Content="直线" FontSize="24" Command="{Binding LineCommand}"></Button>
+                <Button Grid.Column="1" Style="{StaticResource MahApps.Styles.Button.Square.Accent}" Margin="10" Content="模板1" FontSize="24" Command="{Binding ShapeModelCommand}"></Button>
+                <Button Grid.Column="2" Style="{StaticResource MahApps.Styles.Button.Square.Accent}" Margin="10" Content="直线1" FontSize="24" Command="{Binding LineCommand}"></Button>
                 <Button Style="{StaticResource MahApps.Styles.Button.Square.Accent}" Margin="10" Content="读取" FontSize="24" Command="{Binding ReadImageCommand}"></Button>
-                <Button Grid.Row="1" Style="{StaticResource MahApps.Styles.Button.Square.Accent}" Margin="10" Content="区域" FontSize="24" Command="{Binding RegionCommand}"></Button>
+                <Button Grid.Row="1" Style="{StaticResource MahApps.Styles.Button.Square.Accent}" Margin="10" Content="区域1" FontSize="24" Command="{Binding RegionCommand}"></Button>
                 
-                <Grid Grid.Row="1" Grid.Column="2">
+                <Grid Grid.Row="3" Grid.Column="2">
                     <StackPanel>
                         <CheckBox Content="仅图片" IsChecked="{Binding OnlyImage}"></CheckBox>
                         <Button Style="{StaticResource MahApps.Styles.Button.Square.Accent}" Margin="10" Content="标定" FontSize="24" Command="{Binding CalibCommand}"></Button>
                     </StackPanel>
                 </Grid>
                 <Button Visibility="Collapsed" Grid.Column="2" Grid.Row="2" Style="{StaticResource MahApps.Styles.Button.Square.Accent}" Margin="10" Content="保存" FontSize="24" Command="{Binding SaveCommand}"></Button>
-                <Button Grid.Row="1" Grid.Column="1" Style="{StaticResource MahApps.Styles.Button.Square.Accent}" Margin="10" Content="识别" FontSize="24" Command="{Binding RecognizeCommand}"></Button>
-                <StackPanel Orientation="Vertical" Grid.Row="3" Grid.RowSpan="2" Grid.ColumnSpan="3">
+                <Button Grid.Row="3" Grid.Column="1" Style="{StaticResource MahApps.Styles.Button.Square.Accent}" Margin="10" Content="识别" FontSize="24" Command="{Binding RecognizeCommand}"></Button>
+
+                <Button Grid.Column="1" Grid.Row="2" Style="{StaticResource MahApps.Styles.Button.Square.Accent}" Margin="10" Content="模板2" FontSize="24" Command="{Binding ShapeModel2Command}"></Button>
+                <Button Grid.Column="2" Grid.Row="2" Style="{StaticResource MahApps.Styles.Button.Square.Accent}" Margin="10" Content="直线2" FontSize="24" Command="{Binding Line2Command}"></Button>
+                <Button Grid.Row="3" Style="{StaticResource MahApps.Styles.Button.Square.Accent}" Margin="10" Content="区域2" FontSize="24" Command="{Binding Region2Command}"></Button>
+                
+
+                <StackPanel Orientation="Vertical" Grid.Row="4" Grid.RowSpan="2" Grid.ColumnSpan="3">
                     <StackPanel Orientation="Horizontal" Margin="0,1">
                         <Label Content="拍照位X:" Width="60"></Label>
                         <TextBox Width="60" Text="{Binding CameraX}"></TextBox>

@@ -63,7 +63,7 @@ namespace BingLibrary.HVision
                 if (Connected)
                 {
                     //CurrentImage?.Dispose();
-                    var image = Framegrabber.GrabImage();
+                    var image = EnhancedImage(Framegrabber.GrabImage());
                     if (medianRadius > 0)
                     {
                         HObject medianedImage;
@@ -91,7 +91,7 @@ namespace BingLibrary.HVision
             {
                 {
                     //CurrentImage?.Dispose();
-                    var image = Framegrabber.GrabImage();
+                    var image = EnhancedImage(Framegrabber.GrabImage());
                     if (medianRadius > 0)
                     {
                         HObject medianedImage;
@@ -112,7 +112,20 @@ namespace BingLibrary.HVision
             }
         }
 
-
+        HImage EnhancedImage(HObject image)
+        {
+            //HTuple width, height;
+            //HOperatorSet.GetImageSize(image, out width, out height);
+            //HObject rectangle;
+            //HOperatorSet.GenRectangle1(out rectangle, 0, 0, height - 1, width - 1);
+            //HTuple min, max, range;
+            //HOperatorSet.MinMaxGray(rectangle, image, 0, out min, out max, out range);
+            HObject imageScaled;
+            HTuple mult = 255.0 / (255 - 70);
+            HTuple add = -1 * mult * 70;
+            HOperatorSet.ScaleImage(image, out imageScaled, mult, add);
+            return new HImage(imageScaled);
+        }
 
 
         /// <summary>
